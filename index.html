@@ -432,10 +432,14 @@ function load(){let raw=null;try{raw=storeGet(KEY);}catch(e){}
 function save(obj){
   if(obj)D=obj;
   storeSet(KEY,JSON.stringify(D));
-  /* 已启用同步且是管理员时，状态文案交给 cloudSave() 统一维护，这里别抢着覆盖 */
+  /* 已启用同步且是管理员时，状态文案交给 cloudSave() 统一维护，这里别抢着覆盖。
+     其余情况（未连服务器 / 不是管理员）**不要写状态栏**：那一行是「连接状态」，
+     是持久的（如「本地模式（未连接公司服务器）」），而保存结果是一次性反馈。
+     早先这里直接改写状态栏，于是本地模式下第一次保存就会把这个关键提醒永久顶掉
+     ——而且本地模式没有轮询（startPolling 里 !API_ON 直接 return），再也回不来，
+     用户就再也看不出自己这份数据同事根本看不到。保存反馈改走 toast。 */
   if(!API_ON||ROLE!=="admin"||!ADMIN_HASH_SESSION){
-    const t=document.getElementById("saveState");
-    if(t)t.textContent="已保存到本机 ✓ "+new Date().toLocaleTimeString("zh-CN");
+    toast("已保存到本机 ✓ "+ts());
   }
   cloudSave();
 }
