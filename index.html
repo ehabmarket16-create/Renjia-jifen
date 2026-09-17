@@ -884,10 +884,13 @@ function setSync(text,cls){
 }
 function sbFetch(path,opts){
   const o=opts||{};
-  o.headers=Object.assign({
-    "apikey":SB_KEY,
-    "Authorization":"Bearer "+SB_KEY,
-    "Content-Type":"application/json"},o.headers||{});
+  const h={"apikey":SB_KEY,"Content-Type":"application/json"};
+  /* 密钥两种形态都要能跑：
+     · 旧版 anon key（eyJ… 的 JWT）——需要同时带 Authorization: Bearer
+     · 新版 publishable key（sb_publishable_…）——不是 JWT，塞进 Authorization 反而可能被判非法而被拒，
+       所以只带 apikey 头。用户从控制台复制到哪种都要能用，不能让他去挑。 */
+  if(/^eyJ/.test(SB_KEY))h["Authorization"]="Bearer "+SB_KEY;
+  o.headers=Object.assign(h,o.headers||{});
   o.cache="no-store";
   return fetch(SB_URL+path,o);
 }
