@@ -953,6 +953,10 @@ function cloudSave(){
     setSync("未同步 · 请以管理员身份登录","sync-off");return;
   }
   LOCAL_DIRTY=true;
+  /* 立刻落盘「待上传」标记，不要等推送失败才标记。
+     否则留了一个数据丢失窗口：断网时改完、浏览器在 400ms 防抖内被强杀 / 崩溃 / 断电，
+     标记没写下去 → 下次联网打开时页面以为本机没有未上传改动 → 直接拿云端数据覆盖，那笔就没了。 */
+  markPending(true);
   clearTimeout(_pushTimer);
   setSync("同步中…","sync-busy");
   _pushTimer=setTimeout(function(){doPush();},400);
