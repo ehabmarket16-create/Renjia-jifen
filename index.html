@@ -100,6 +100,10 @@
   /* 心愿墙是访客唯一可写的区域：豁免只读保护，让访客也能填写（其余输入框仍锁定） */
   body[data-role="visitor"] #wish{pointer-events:auto;background:#fff;color:var(--ink)}
   .wish{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px dashed var(--line)}
+  /* 云同步状态：右上角状态标签三种配色，让「已同步 / 同步中 / 离线」一眼可辨 */
+  #saveState.sync-ok{background:#dcfce7;color:#166534}
+  #saveState.sync-busy{background:#fef3c7;color:#92400e}
+  #saveState.sync-off{background:#fee2e2;color:#991b1b}
 </style>
 </head>
 <body>
@@ -108,7 +112,7 @@
     <span class="logo-plate"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAWsAAAB4CAYAAAA0c9P5AAA0PElEQVR42u19ebhdVZXnb5173nsZCZAECBgICZAAMkgiAhrGQBIgA2GyCj8tW61q7a8du/yqbEvLbv2sLrVxaOurtqyWQhHRkDlMAcIUAoQgAWUOJBCRIcGQkOm9e87qP/ZauZvje/fuve/wzn3v7O+7Xxhu7r1nD2uv9Vu/9VtAMYpRjEEzGCAG4ir/vyQvKmarGMUoRjH6x1CX9v8zM/FJR07kTkxhYAqP7pzC57/3UNtGMxAVs1aMYhSjGK011BEA7Jo8/vDywSO+yl0dj/DQjm6OwAwwxxEnQzvfTIZ1LSmPOeAqZo6yBr4YxShGMYrRXNgjQkTgMSM/x53xa0xkDLR5pdbL/LdSxDxiyN17jzz4hMLDLkYxilGM1hjqEgAkwzp+yHGkBrrMQPIuA10x3GV5McelnXz4oXNAVHjYxShGMYrRVIw6IvABXdeKN93di4Hu66UGezePHXVqAYkUoxjFKEYTk4l84PBrOC4xAz0ehvrdBrsrforPmjySgahgiRSjGMUoRmPhD+KpE0dxZ7xJII+yp6HWVw+DmEcO/5J8dlzMcDGKUYxiNNKrHjvqSo6I6zDUvB/b7urYzDMmjtKLoJjlYhSjGMVolLEe2bXYShpyHa+US8R88MgzCnZI/41i0otRjAFor3nq1A680z0ejfGCU6RgDOm4qLAbhbEuRjGK0aDiFwLS3WNLh6ZdnUc36JwzAEp37x5XzHBhrItRjGI0cFA5iaKGYssMcFpMbGGsi1GMYjTOqgJD6eBt6O550/5vdZp/joaP2F5MbzGKUYxiNDrBOLzjtoYlGCNiHj3qvCLBWHjWxShGMRo9uobcBCJqhKeexqXXd04Y9qTQ9riY3GIUoxjFaEySEXzCUYclnfE24Uon4UUxYB7RdW1RFFOMYhSjGE2CQsoHjfgylyJmYF9oQUzSUdrKE8cdWZSbF6MYxShGkww2MxN3RQvF+O7zFHJKOC4xjznoqkLIqRjFKEYxmq0RMnr0SO6I7mTa7y2XqxjtZD/0EcdcPmLM5xEVEqnFKEYxitF0gw0A/PWvRzxq2A9To8BnG+byuzSsAWYi5qEdL/SMPWCmaFkXRIRiFKMYxWhVSy8j7jTyrGRE143cGb9qNSNgkUJl7orX85gRX9155smHFNBHvkaRLChGMQaPh00EpADA57z/MDz15DF4q2cM4uhA7OvZ2DNp3O7Ol15fjzTdj3kTkBSzV4xiFKMY/eBlV/OWtRVYwfooPOtiFKMY+fG0o14MQuFJF8a6GTqQTDl4BiaioqKrH9a+2fNeZX8Va159vtjxXOr7WjafvaxptiIzt2tLbbQRouzvJaIkJ7/tz8LKvPy2zCYdMFn9Zs2vvZbVvsN6X1rrcPe2P9pgpAPlQnJd0z7WKzfzQG1ioJmI0l7+/wEADmrxc+hNnMifrxFRucqi9+ti6xzm7fLI40WWnSNmHg3gMBiMV73AMoAXiKjbXufBPL8a5TBzJ4CxMkfkcZ56iGhrk5yTd50/Zh4B4HAAQ1DB7ll+814Am4mop5dz3KsNGvTGujcDw8yTARwN4GIAx8FoFBwNYLQ8B7VYhjKByay/CuANWeytAJYDeIWIHuzPw5y9KJg5BnA6gGMBnCeHqqtN7UMJwHAA1xDR88wchR6k7Now82wA8wFMBDAFwBGZvZUCeBrAywAWA7iJiHaIcUD2YmbmYQCuA3CgGIO8e9mJ7IsfE9GyWntXn1sM4yoAJwHocYziUpmPR4nokkZBW72s6RkAzgVwPoAJAI7sY+/vAfCCnOnHAdwKYI06Y4P9Uv6zhbdDEGaeyMyfYeYHmHkXt9fYwMz/yMxjWxkKM3Mkl53++ynM/ANmfooH1tjCzEMzBsN3nkj++XBZq98F/I6XZI9S9rfoOjDzR9pwfk+2n6EWZMDM0+v4ri9bDkW99kPn/EBm/iIzr6vyvan16ms8zcz/i5knZb9jMBtq20i/l5n/LzNvz0xcOfNKMhPeH6+kl99lL/6zzDzTZeM3eA4vYea7mHlvZnOW2/y1l5l7mPk7oQc8M0+fZeY3rDlKetlf2QNuv0fHr5i5k5lLGYOtRvx0Zn5B3rs3p3O7T/5cI88Ruc4lM/+zzE23x7lJxAk7vt7zkVnTv2TmTX3s+6SKcU57WX8dO5j5m9bzlgarodbbsIuZv50xMD29GMB2GIlsXB1fbNYi2xEJM5/AzDf0csklA8Sj1n0wPWQ+1bgz83uY+Z7MPkvqXOef9WZ0rLUZw8x3ynu7c7in9fL5B5+LUKKUZ6z5cJ03ZuZHG7D/dU1HMvOSBqxp9nf2WP++zrpcSoMS9mDmMzOhek8bGui+FlsPwWcbvcgZyOPzFlyUtOkl53LANwoW7AWBWHttluXlNmKOUstgX9jbGlsGpcu6TJOcrs/xnhDIGQHzqPP1ZbEDHfV41Mw8jZkfbaJzklpG+zVmfl+rDXbUn940ETERJcz8NQBrABxvsSziAVK0E2lWGsD3mfkkeeaoQYmUVPC5/wBwLYBhkuyMJHkzkAqfUtkbtxHRbmaOXRNSmhxi5o9IEniSzFMj5kiZBwzgG3KBcIZqWJY9v4+IrgHwRfk7hHwUomiC9nkAW3p7hioJxrkyj4lHgj6WP9fJGqahiURJIN4OYKq1plETyBixfP6hAFYx8yny/aUBa6wl65sy83Bm/j6Ab2SywwOtstIuFLhOvAhuRMabmQ8DcAeAj8pG0oMwEIfujYU+jWDFqKuhvl72fdLgeVJ635kAPij7u5Qx2KkmqIjoWgBXCwOhlAODrRfh7US0E0DJ4SLUApLzPdllehZeBHB/5rLwcfYSZj4KwDIAB8v+b/bej2WtRgNYxszjAaStSDpG/VXlxMyjAKwA8DmZ5IHeE1IP5GkALhFeaqlOQ304gDsBvB+GLhUPYAkBPeCbAfxW9lHqOFdlZj4TwH9YBr7URO90Vl/GS6LJlJk7iOjXAGYDeE5+TzkHF+HNLheh0iWZeQoMXY89zq9eTCtlbWIfyp5lQ0YCuAEVbnfcwrkqw1AAf4g+SvcHgmetnNgbYLiPA93IZA0OA7isTvhIPeo7AZwoG6djgM+den53EtF2F89PIji91H5uRThRk8/T9IxR6q0Cs0eM1L3ijd9veW3cD3NLADZ5XIR6Xi8Q6C31OMN6US7ziZDsvy985+8C+GCLDbXtYZdhOPkfl0unNGCMtRWO/jOAS8RQD3Qj05v3ci4zd8lckKdHAWYeA0PYP76fNmp/QUkE4CZHz48ARMw8RLzFSRbM1uxxhEuBhx5wInpLvPGb5PelLTbY6kSsIqK3xaFix+T2FQEXQyQR0oO+EIgVKc0D8Kl+3v+ap/hHqYxMQzj/uTPW1iR/BsDfigfR0YQN1+hXM8ZIAJ0hxl6ikv8D4NRBZKj1gL8CYL2j56fe16cBnCGOQasy985hvZVs3kNEHwbwBet3luWcuLzSPuAG9rgIF7oYG43uYKoBP+AZrehFdCuAvZ5JYrJkAL7XKvihhv1MALwHwH+W5yi1tbGWzZgKJehb8oBRnaXeSWYzUpNeXONAtKTM37rsvgyTmKrHUPd20PP80t94t3ihVT0/2W+JVJ19Rf5uKy+1Dq2udDTYqbXG3wfwMSsBWnJ8RVUiOZeLcAuARxw9Xf2uiwAM9YRAlAGzSNaQA+CPr1psnkbYEW6Ad/15Zh4mZ5Sahbu06gZKYcD4A2WCKNBzjvq4vRoZOlJmY5V62dytpjkmzHwSgG/XEc4nVeYPOac/AsBNjrK4yjb6FoAxdToHIftmLIx+zQZX3RIxXIkY7OuZ+SnxsmsZQ40yxgA4x5YdBbAEwFkwVLO+ZEt1P68iou2O+heaHJ/viTmzdTGsc00SZy7gCQD+uo4zoHailPn7HPiZkVwaRwD4FDP/sFnJ4riF8MfHAcwI9AhTy3BuA/AAgIfkzzKAfU3KpMcCVxwBIyB1FgxOnLYwKiE5HDEMmyEKMD5pxkivg2EgPApgveXBIscsEALwhLBoEgemzKkArgw8gGWLHx9qtEuh0q9i4B8FcI3HPvmkGOse2bOPAvgbAM/WMKZqwJe4XISW4/AeAGd7MmsSea9eDHFfipVVLuC/Q6WWINSOQGzGYwD+JFDOaCtf4Lvu+v6PEdEPqu1P5LxCkZh5mFSdpQGVRVr99yYzf0Iy+/31PEOl4iq0+iy1KqCcKvCsyrdPWpWdIVV/CTP/jJmnDmQhGtXmYOZfZvaP7xpxHetbZuZp9ehdSAl3yeEVy3sfku/eZ1UGXl1jDhJrPw73LO3+ZMD86vfN9Kn+U9EtZj5KKnTTgLXR3/kCM3+KmY+xPv8IZr6AmVcH7hl9tn3MfHpblqJbC/upwEnYrx8g4c/+z81s2KiJL/tQaILjq4HPo+9/0NJDIYfLboiou/ledom1Qadl18bRGOTpVeti0/U5mJl3ehpc2wD81JI+SAMN/fnNPrTWHprCzLszAkknMfNCS8Sot9FTTdOkxmW4zPMM6F7cxMyjdW97lpRfG+iw6G+8n5nHVWsMwczX1Xm2f9SuxloPz+M1Nk21xd0gVDUwc0czqTGOGzVi5iMtD8bnMOsm+7Y+j+Mm/XTAJtX5e06qvHT+ov6cw2Y7B2IEvhAwX7o3vyKfdTQzvx3gxem8z22BsVbD+dmMV/0EM493uLD0ma+Rz4kdz/MhokLns/9VO+RmT69av/NQZt5ax3o8yswH9nYO9Nmt83ZrgMHW967NyhTnng0i2CFL3f57LVDfFacEgN0AriairYJv9fRn1xUr8fIGgA0BZbI63+td/q5gg50A/psnPUrnaDuAWUS02Zq/dAD3D0zk2T4WUP5cAvAajH5LBxG9BOBuK4EHz7nvaEWDD3ne2ZnvvhGmqnVElWS+PvM7AO5z1OfQ8zsbhn6aej4fAVjh6SyoUb1YcGWf79Tn2QxgvpVAfdc5kKrSsnU5fE6wbPJInurcvA/Acb3JDeSZuqdhzjwLuPdNBHyNiJ6Rw1NGPiIFhukyMTLAIEQwCdJVtYy1FfZfA9O1JPXkskYAvkdEL+Zl/lqQyFbR/BMDuL+QxNduMRARTIUoApOvpRbRYQ+HETBS49sNI2q0oIah0WdaQ0SvuLJWZE+e4Tkv+tt2CP3Sh7Kn+iPXBCanIwBfIKItcg6SGs5YTETPwVCMI8+11y47k9FOPGsiKsskL/D8Ls3ebwLwY9kc5fz0aSWGoUId52mslc+5CsAOh2IA3aR/Bf+MdwnAHwH8SClPwKCocIR4YHEgPXSpMiLEcO0L8I65RTUMuhfPgqEKKi/7ZVn7OTWKRvR3LnNppiwVmWUYpsllnheS0uUelijP9WJQ/ZFj5ILw1R8pwXDHl4qX62JHtKr4egA7LYEun3F1M6KqqJkdS0Q8Z2Jg6PJTItrrqP7VaoNwknXr+hYDLHXQtLBFct4fKJJzk1U6nFdaXqN7B8Li/vo6B1vFs2brUL9dxzkptWgvXm0VeADAbQA+BOCAKvtTlRn3AVihHG9HW3G+XA5pgMrezS4XQy/POAOm56bvdwLADbL/nUro9b0SAd9VS+Olj997FjMfbBn+tqhgVC/HV+Slx8K28mRoFNq5OiAMjGAwZJcNoHN1IfwrxOKMlzhQ8ek/00YXCOTUKgUgtSCQHdrJWv7b1kyVWi6MtVUgcghM82Ob173YuuDTGs/8AIx2tY8dmOMJD+jFsEvkV9lTC4Rg+PI+86/f2Q1gqafBhRVZLfH0kHUejwJwhDxr7o21guuXBXg5BOApItoQUI7abA3uMkyS47yAYgAGsBrANhc9BJm/K+pQT3s4VNS9DYcmoU6FwQx9IBC90Jb3UhSyK6eXnUIgH5L9qBDIGwCeAfBhR92Mla5epyS7O8RYIyAf8AgRbVIt+wD9EQr4zv2XkWd0qe990JMYASsqm99oGxs1K9EDo9s8OTDRs1jpNDmCQPQZzoYp7Q2BQBbW2jSZTXq652YJFslp86GZ/Q8HskB2ArjFggN0jZ6WaKgl+i8BEZ4mEXs0mpJ9M75KQpotbfUlLhGiVWNwrlTzpgHMpMXyGSXP83aRQCAhOYhlcpYiz5tQmwn8AcBvPaNo/Y3nCRWyYUp8UYsSPb7dNpbk0CvUA3JZjRCzLwjkTwDuc4B2dE1mAhgSQA0kAL/JU1TSonL88aiwFLxF8AHstBwNX9W63kZPkyO8A8SQkQV9LYaRHoYDBLJGvM6Sg9epye45AVTGEoC9qGDjqfuj7tcf8WKPWKyYpXWweUiYQY97fr/uvQ8AGCVzm1tjnQo3eG4gBPIEgKfyhLdaB2SEdUB8vd21RLTFIeEXKpKj3s7LAB7LId7fzGYWLBHPQQEQCAA82MehCjlk+ndOCxTWdz2z5+LdLJDtMNz/v3CE6JYTUY/jM6aiInhJwGVIAoG85NHXUaPLw2D0TnzPm0Igf3C8jKqNWyxtGtf1T2H0S85rZJQVNSHRkwr8cUpAokd7wPX4aAK3EAI5H8AhgcUAN3ls0sNh8MgQetSdwgIpDRIIREdIEko9sJVVPLDQg35ck4y1jrmWB8/iVY+HSW5V259K5VzuCIHoPno/gKMDIRClB7qeaf38S2AS7CEQyBKxI3WYMyYAD8Mkmn2SzInlXTfMzkZNMmrzrUIY8uyicnedh6SZ4facwGKAtwDc63B4IwtC8t2kCoHc2GQjkSsWiHh948SzDklCrQWwWT6Le3lPKMd/SJMivES83NkW+4fEWM+uwdTQ/bQWwIueXuc8TwhEGRk9ABZnKJEuhjKyLiQEwC631HMONNKSaPgpz3OvDtYM5Xc3AreOmnSAzgqUwXxFsLTcGGs9IDJXFwVmwn/vWAygt/mlgZVab8EkxQaFsUaFFaEQSAgP95YajIjQeexqYoQ3A8A4CwLZCZMIu9pxfz7s4XWyNKa92HPv67w9J+fa97yNtWAE3xzEQwBeagAEonmqOz33QmTVYxzfKApf1GAIpCwh/NkBk6w94N7JGwtEFuw0mMrFkDDwllrFANYmPRQGj0RAq6QHiKgROF3bGGuZ18sDkr6xAyPCLhYJ5VlzE/bi+zNJzBVi3CY7QCAQL9wH1pwAYEpg+66VVnNg9pi3i2Fw3yTgAl7YoP2vzsCaAHtZlmeZ3ijefdQEFsjMgG7HGsLfnEevUBbs0zCltmkAJnqrQybcFskZEYiLL8IgGVbS92CYXEJIEuoRAJuqXG5pHayOqAn7UIXMrszsmRth8F2qsm/0vz/v0cHcZiYhgAVC8GBkZH7T3IAuNCUY8bc7GmRH9KJ+DMDrgcVR58hzJXlLMJYE2wqhtr0K4KE8sRgsWtgIuel9lQNJIJANdq+9JonkvA1TdDNYIBDdu+fAX41Nxwoi6q7y9xKYwpgQp2VIkyQcTkdFwkGr9F5A7QI03U+3qliVg6fLwuyah7DirGcBPO7D7BKO81i5gH0T7ARgHRE9H1AI06uTJp+zHcA9nudS12G69VzU7229rFY/hwC4IMDLiSDNUB17wKGFXap7mPmLAk/4tBLS51qkxQB9Kd+pl8jMQ1Ch7JU8tS3WwfBmOyXpFrW5zKnrZTrfcg4iz67Uy6pdbrKntwdegB1NrF/ohNH16AJwH0wyuhb7KrIKZ3zO9AQAZwYaztuJaLdH+y4VW5oFwyNPAmSVf2NBjmmDoCcWb/1qT9xae2N+EIZKWJeoWtzghrg2zlTy3Ii/yRnzQw31pQC+7tnLjy2Nk+VyQ7PDJp1hNXj1xbj+RTyJ7kECgSgr4kJP50Dn9nEAz1l0ySzspaM7Z0JVCzLGexFMIqtUxZnQi2wzTAk1HBwiPdPzrIpH1zkuZc40e8JT8wMS7LFAILfJeUsbWR3LzI/BsEy6PCjJqVysFzLzmrw0zGVL5MV3cVT0vV8hEMsTjcS762HmGQB+YS0MeXrVjxPRBit56DJ/kSddTA/S6UJha2fxpgiGH7tF5oxreMZTYXjvHJCEWkpE3Q4C8VTnmWhY/QIzn4ZKok9pcXcB+HGN36r7cQUR7XWMXlMpl740sCntRgBP+JxpecZOVPjJ5GlHHiGija76Iz7rSESPM/MWAMd4QG77MX8i+nq9uHXcQC9ntEAgCAhdHgTwpoSOaXUnFM3SlkitTUrM/J/kEAzxNAb2If93Sw+h7NAR5pLAXEIJwN8NBKcZbkyFSDyn+dblFnvkR8qoFMJU29cM00klZJT64G7XG7l2iLffKRS1MgwuWo2poQbTqUuLdTmMD2AzsMXs2uEKa8rFkMBg1eMCIZCbXc5bAG6tNSOrLWMdeUBXxzDzEcLUolCmWyM865K0Xp8FYFQdITz3Z8jJzIfK718Ak4k+M5Mo9PUsXkWlQCVx2KTnwtAe08DEb9LGHrXumUWyoftMDslm7xFDOC+A+xsB+D2EEVHFkKjn+qREPK4wmO6V8QAmEtELDUh2qZebTfTdCFPp2lXl3Ckk9yqkS4sDRKCXw1yL4ljycFLIwo7h0xGGmed5YrsaZewRmmAjIZB3UfiYeRWAT3iWnicwCfDpAH5Vz0USNxDTmRMQ/ukG+Bozf7ofQnj9vmEApsFwVbNJEgosUPmBeBa1kiu6Sedai5tHsftmr0MJwEqH5JAe5DMRXv78gOUxJY44qu8Yhkrrt3pVLBNmPgGVJKJeJKsB/JPDRRjD5E66a+3HDGwxJ1CfZjOAR30pe8w83Cq+8YVA1qr+SBNqDHSP3CGXwvAA6O1iMdbcLzCITox0RZhRh9E4O2deHgUaTN2sbwL4qSO/MmXmYQEVYgNl2DKlmhxKHFkR6qX4dh5ZEqBtHHJ5djZQyCcLgfxW5qxWVa06JCs8JULHB+rTkKzjDg9ml17OZwA4MhACWdJoCKSXC2U3DOd6umekRQBOk3O+JxQKqdcwlCxjG8p1VQNZ7seXDSGU6pgXff7vEtFbtcSULJGc0wO8RAywdlz3ENEb2vWlWm9P+ceQxhYRTOnzfY6MCNsY+DYzaFTkyhkVS/3sX4jR6HToYL4V7i2qSnXo01Cmgzl5Fp4tCJBD1fZkyxzbk4UWxcVSon9fQOk5wzRxniyfFXTGowaxQKZ7FsL0tkHifnyVGuD92I1qf+LZqHbeICpm6cvbXepQkm8XhhwX2L7rVmVEeF4mLT9fFtY9DpVWXR0Cgdxt0fhq5TGWANjnWPKdZvYkAkTLfutqOK3CswNgKiVDO8K83OTaAv2u+wIQBP27U9Ffm8lq9XNZHdDBQPIQCcBXpOKJanjVitONhEnONru7SJ4hkL2Q5JBjb8qLLcoieXo4rl4fZ9o0hTgxcYMusrPFg1bI5xmYZhazaxiOyNKTTj1gzWGWYQnVp4lc5VDlt50KYFJgdKlNqKMmagrZEgXbA/NrC9Afxtpq9XMWKhq6g9VY94jH83Mius4Rq9ONdTT8RXIGytADsBrAm710avmzCzHTmMGXBfIGjN63T7i8O+Ai5QYp75E87+UZL/96gc6GVnkOfebdFk0xcWB2EUyh0dgAHWlCpX2Xbx7hygCZipJCIM1W6tTSc5g8wdrA0vPTmXmcOLnUSs9aW/3MbWBpZzuOshjqewF8RjWWPTbp7Dzqd7d4LJfLjRzw/ZMAnOB5uSWWHOoeh0vBHtvrMNalBglVaf2CJix/5wiBAEbT4g3HZ9YzfZmn56iG8x14dDDXBLxo79QDgbRKaVKrXe8IZJ2NhuFpB0XRUZ3cz2EIL+QYKJ5hLIZ6DhG9Y214F5wuRCRnIA3N3K/wuLCmyeWYBOzz5QEHpdwAGKOe5P1FMCqMSun8A0ypvAsLBFbTWHIsbhtZh277fUT0Rw9euUaXpwA4NjC6XCKXGrUwErwtwOYlgYlx1EXds7ifp6CioTsYQ3iC6SR+lehwu25SPRgTUSmtLXl6bukAwPhLIuz+Rw+a118EdDCPAGyDOyPC9o6Tftaosdt3RQAWwsBmBzsUwuyxDEvqWNw2HeEVhMs8RZR0Da+wtMNj31xHCyNTbQ7yGoyi4OSAasaTJM+Xtroo5rJBzGJQr3qFGOpOkdv0KR+ebxV5lAKKSNrdqwaMpGVZKvRqte86Ggar9YVASmK03vFQgGuExgfVA4Ew84GWlnSHfN4yC3os12AmPYhKB/PEsYIwlD63v4N5DZ58FgIZAgMF+kIg+nwvt0qpU54tJqLtzLwOFUaSz34/D8A4InrZt7I1rkPjeRgGL4vBfuZZzPwT2XiuZHctH744sP3ZOyKJSg0KufuDBRLBMBr+zaF4KBLjdb4FCZQ8G1ss9tQU1nV8IaCqVL/jDAt6CZFwmAkjgaDaJ6/DMEGuc4zGFkkEV3KsIDwQprgtxHDe5xkhqQTrqeKhhkAgy+S3xo3oceixNgQDfX4kkN47C8BPfHN9cWCdfMrMUyTZ4zvJ3J+hZS8HKpRyGFm0qi4i2uUpknMkwirEIgC/JKK/GUw3o3jXlwd4fXop3Osjgm+9b5MYy64AnZjR9STvRYLAjg4Ww7CH3lMDAlEWiGvvQDWcUxHO7Fou+9o1n0AZOdTEU4xrO4DrJUoqo7WEAjDzQgDfkcvURzI1gqlmpFbAIHobLPCcZHuRYuQP0ogCM7zDAZwMQ+dxMQYlSyc49mxooPzgX9q5g3bWpe5FP7ovSOBwq4N57AGBxDBY9bZqDSDQnCYCXXWoWB6ASqIvttq2za+xz9R7ewyAb8eUKzwvQ3s/L3PF+K01jVDRH/GNXMoAvmexr1oZWer8d3uyZuzWfV1SnOVceh4HHC4VfZ8dWO67CcCXYBIm3E8eNYt3ci6MINCRgTKoiltPFWNdNazJhPtzAi+UTQAe86AI5rmBAHswRmbKxeirAAdUhJs4ELLhFmrvKASijSj0Mn8DJqn1rzXO3f6OKRl5T5firAs9xctCk8S2GJdvjYH+tjEAPo58QaKu+2mcRDDP+hj7OBACGQtTceRbmKDdjvPS2PVfRYTqfwL4TIDB1kke6jl/42GKiUJEcm4lop3t3sHcg+esxQihDVT3Wrhxq411qQEqlmoQb4VpLTexSiRo851XObIkyGpsMMnTcOq8PKwdzD1aZalwU+QZXeYJTi0FFA1pXcZcgVFKrk5XHAiBzA1gMZBV4VSyyoX722i8BeC/MPMZAE5rMg3RFpEfGgiBrPQVyRkA7bvGBqg67u8eAmBzHZrSaR2Y6IhAFcsDM1xngtGuXlCj36Qa2ueI6GlHuVDdk3MCYM2SpT3iQ58ry4V0WR3J8TzCqb7EhO/67K04gGdYqiOEV53bVD2IHBgEFVd/QYx1yG/aFdhjjjy9xG0AHnOlR2HgFM3MCmCB6FjswoioEervQ5g29dDA550G04hCvbA3ATwN4NoaCXE9Z6ssvrOLRO8QK9LzbV33BICnXZO3VoL9GOu8DaYaDX3WUwAMU2KCiy2MfL0cCcXOCRR5WUVEbzdZcCVUdCdU8J8BvFgrzLa8puGySX0PBgO436oQ40GkHTInAAKJBAK5o06+dI/V2qvZHc7188/PhPl3whTBHO/gVTOE7+xQtajRxlHw72Cuv/U2ItrjcaYjMeyzAyRYMUAovymAg+DZBjEK4BfORUUBjDy5rotayIf01Tg5KJDzvAvAww5hoM7fTBiRnHJABtxXJKfdIZCUmQ8K6O2p+P4GInqqzrZa9VSLRgGRaxcq2hxkaVfPrYGfs9Wo9sGM9nctTF0pkeWAcH6x5zMmct6uHMQ1GnrhXuRDJ418Ex/i5VBAue+rAB50FXlpIXWMBROdHABNQMLAHQ6XkF4K8wOSmNpJ5fY8zV+LKhwvFK8yDVibhY0QLGvFfFsJ41NhKuNS8cz3igE+u8bzp5YWSFor2Wcxu0owHcwpAAJ5xqeDuUaEzHwsDIOKB6mmkD7zOUTErvTbyEcEnZkPs1pw+Sqe3UFEb+cshNffMgmGypcGQDu3y2T3KexuJcpGifEJmb97iOj1BjRfbbdxhmfyymaB3N6AkvEE4Y2cQ77XLiUnGEpot0N0oYlCV+aLJh8nwjQ2CBFuWklEu30gEPlzBkyPymQQVz8zgEnMfJJV9NUQz9rGmUZ4QiD6w5bkOIQPafZrFyrUKgZQCORDAA4LbIq7fJBBIOWMlnPkCYE8RURPerTvQpWKtd2BGf+jmHm0JPHIIcIbioqKpe7FGyx9kFra1S8DWON4uemZtouzfBs5LAvMQQxmCMTuej4UwImu5zryxJlCWQxb4S/63iK7wEPg31FZn2E9gBfkVmQHCOTyQJGcPagkjZLBFCYCOCKwg/lNzEwe3N++RHsSgbp8vHvdR6MAjHBI9mm0NBmVDuadEh2ssS6sWu27VgAoO7bv0jM9L5AF8hKAh1wvQys6nwQjxoVB3llK53ueK7QZu1aaCQQyPSCEj2EyxrvyVB5tbZ7JMDghBxT4aD+/PpXcrAoxTZSFiOTcC+D1di8vDxiXBHQwV4bOujqqFrMHah/CcXcf+cwFFgOlU5wBVwhExapqPnOGPjctsBJ5ORF1e+xJfcYL4F+Jmr2U8upghIh9fUgK8/5Ui8IXe5S/XgDDmPAthEmtEJ5yNrkpKjKvvsUABOBmB49LRXKmwZS1hxTdrPAUyWn3kWY6evsakhcB3N9AnWOq4+9Fjop3nahIONgQyLlW5Vtco2v7w47JvkgM+mwAQwKKsxKrYYRXEhUV/ZHQfp0DKXpMYXJlk4lorcxPUo+xzurc+k7u2+JZ56aQw8qEx9YB8Q0DHwPwXC3tBdQvklOGh0gO2h+v1sYWH4B/A1V970rVyA4QbmqkpnUHanOtlaJoMyQ65VlWwxTCVNufdhOM3Y5iVYl1pn33fgnAFvltcG3fJWt6JIAPBihdKoz0XYk28qSLowb2MgBXBUB2LBfy2rpgEAmXkozime/CPgxgV8741WRBINMCigE0zN5dDR/MiOTMCBTJuQfAa4MIAiEr6UueydiSpXPcyKYYaeAzdKF2FWNkqTCSwB6dcm665SBXiy4UArnfEwI5NgAC0c9eI3bBlZlki3EN84zObYz87xt0+TbDyVgvDhl5agwRgEuZ+Tu19lns0F2ZYJSxxgQmelTnNs7RRKs3fEkdGieLHAyCXgrTYChSIbzSpZ4iOWhzydQkw4qIPL2vVxoIgXAdmDVn9CuoSpI7RqW9m1JCfw1DW6wGU9h63a6VmgqBnILwEv5lmYvGVYxrXsAlmlodcrSzTDmHNLzXYPpjjvd4Pt3bpwI4goiqatjEjlnxKwJZDN0W7zPNGSZakpAspPJoC4B1DvigLZLDgSI5tw2i7ucayYV2MC8BuAVAd4Odg3fqMNYlB3jgUIueN0T+vEXC/mqGPrES0G86Rl+q6ndlIGa83dqTiQcEcpgVJfhcDpofukl+d3fe6gxkr+1k5tUAPupxztV+DIORoNhczSOPHLifB8Bf59ZuE78lT4UclsbJ6IACFbY0Tv5UrRjAgkCGwOguhMzfEzA6wTTI+lzOC7ig3sWIaPB8pXWqw9WKbFXCQTXeN4qROscRAlnkUpRinelDrM/2paveRURveRS32YL7wz0rUfW9v7cqJfN4DvQ3LQ2pDLfmB0HG2uJ+ngzgmEAWw0oxjHniU2qByhwrxKRAjQ6XCrEJVhWer0jOLUS0K2fCV80u/R8Gf957akkaPNSESCRpEpNEP/dSy8siAP9PIouRVar8NOrYAZPXcG3fxbIfD/U80/obVgRWO84JWBe2SujzfA7263oLZBZ5XCo6r1MF/uuzgCpy+JCrAvQRsiyGXEEgVjEABRT4vKadR2oJN6F+kZwlg8ib1sttHAyeGqLqeIfotMQNPtT7UGfPviqJvtEwHa8ZFS2QnwP4rOMzP0hEr3g2o7gqANYswYiW3eIJgaTiyV8Q4LBEMAVhN+Q5upRnLImU7TpPm6fzcRqAibKG7sbaSvQMFyyNArQsHkKlTXyaMyW3MYEyrxoG/qlaGJihBl4UKJLzJIAnXUVyMHCqFi9GhQXiC4H8ugkQCMRghHpbp9R43r8SD1o9su/DCDlNtxhV1S71m1yiEAuWGyOXQ8iZvhvANjnTPhDIRQAO8NQCUaP1EBH93rrM8+xsdMNQKDkwcru4mk2KaoRLJ8vGCWoTLz+ecgiBzArYPDqcNE5kYw0D8L5AetRGT53gAYCEcIdVCIMAVcd1Db7c9HMerKNN14QqhnMogE/L9wyBkWX4FwD/u5Z8gdXh27V9l+6j02EaG6Se9DLAMJNCzsxZASwQfe+NbaKJo7/31gAeuY5p4qGzj7G2y185wMvpAbAyxxDIgsBM+DZRD6w1JzqvZ8MkVUKa8d4/WPAP5fPD4KjnBmhXM4B7iWhrky637XX83cOy1bvr16+P5TL/a5jCnwimeGw+DAPk5BoOUmpFEn9wjF7JElEKgTX3oKJimHqIcXWiUiVcCiiou71NNHEUa96MCqsj9YwqZwAYIuwZqmmsrRC+A4br6hsuEYDHIdV9OYRAxgZAILpRVhHRDodMuH7uFEvu0veG3i3cVBpE2tVzYRgSSUAS75dNLLyK6/C0xsheiZk5ZuaOadOm9TDzBABfkfe9BOAamKbNV9UoBNKLf69F7WNHw3mAVZzlu/fvh2EmxY5nWlX9ZgA4JBACeYCIXm6Hzkjy+yLp6XpfQLUywwh/ndwXrBX1gb0wDOA9JbDb8cIcVhopBHIejJh9EiDzuswxJNPNfGwA5UvfO3MQ6VYnFkMHgY0ZnmoSXh1aCanh7HnMPImI9hJRmYh67r333vEwrboOkfV+DcA3AfylQ5GKGvJfEdHzjg6R7tczYbQoQmDN33hW0LLVrCQKmMMUwM/arTm0/N6bA7ue2/1tIxePwS7kIA+RF3sD3JvHeaxT42QHDJWupsaJtalPDeBd6sXwITnkGyXKaTfDzS6XjRXxjAtM+pZgklAvNpHPz3VUto2EETJbBeCPANK3tm27WuAPNcxnZopcahXadAP4pkckQVajZp/iLLYiQ6+qUFnTIYGVqKo/skTOW9pGe56Z+RkY5owPBLo/GcvM/10ioXep8MW9hUuocD99JzmC6RL+uzyxGAROyGbCfTVOHgWws9YBsSRlSzBJTASwIljK+xcx8wIi2jiQIRC5/C6F0dEoB8AOCz3LnxHg5YXUGajBPl5eAICDR49GhumROmK6+ne+KZd4zYpFCwLpgim8CJHo3QBgk+tlKCyoBIbRMt5z7vQiWaJd6dtFE0cuKCKiZ5n5SRg+e+qI1atdOQ4md/NaLc9aCxMmwBTChBQm3Jo37WrbW5XQsxUaJxEqpcOhHZBPBrCWme+HKfHdYj1LnrPiBGArEa1zTfoy89zAxhbvCKTQzGR2GYZaNzQgWUyWsac+pFMjj3L6p8WrdlV7VO2bc2C6mIcyu/bJd/p4mPMztsHHWVkMtG3+pYyKtgt7Ss+OhKms/rn1Wb0a65KIvMwRF97Hy9FJXprDDuaqcTIvUOMktMCHG6B3OxaGvbKgzTbtj2CodNUaM0RW0cTZgRDIYwKBNJOHmzZgLaMGXIAM4MOab3HteygwwpkBuu0KgdziidmmzDzCKqH2lbjdiAqU2nbwn/y5IeBi1L/7PjHWXC3BWM5Q2yhA4Oh+n469LSxjHgnDMQ3R6FgLYLMnJprUWflmX4BJm7zKMLTNbgC/cGnMIOszM4D3rhv5ZvmMUpO43xGAtwD8rh+NhyYV/5aInrCkIFz2fjnTks+3l+UzAB63NHVcm1BPBXB0oL7zDQKBxO1WY2DN0QMw3P8ogMJ3WW/zHfXSJn4CTLdjDqjuW6GtfpAvJbcUwHvhr+TG1nM5aZzIHKqX90oDPGw1RO3wimBKpjdJc4Zaz27z3jkg3NwjsBs3w4hadKzdAJ4NoGM1YvSIJ3wdEX3P6gvpWlXHzHwKgBMDz/RSiYx8I4MFgc02AOBn7aw0KRBwt6WjknrCte+BFBLZtjTqxcu5KEAdS3G5FcivmP2VAQU+sTzXUs9Jjy1uan8c8P4aChcsV65+Nc9IIJChEvb5NmYggUCebzIEwpZkaasr6Xrk8lsF4L/WavtUJXK5WD4n8cwHJKgUt/lAICOtZKavqt99AF7Nk1JnHTZnrSdCQRZM9d4sbTHqxcu5IpDr+jqAu/J0I1oFPsMsjRPfzfOIZMJ9Cnz0fY/2wwFHPydXbMnOtBpjQNZnOkziKwmIeLT0P25yGTzB6GK81cIEb1kM7N0ALieid6wz6upWZ2FN30YOG4lorWsH84xMxbGBycxF4pVGbe60AEYNca8nRKf26fLsGYoyiZ4JqGQwfSucVkrGOE84k26eEywIxBeiWU5E++DHAEgF67wTRpCJBkH/RI3EngewwYG6qUUTlwVARftVHZtdiiwXdEREbwD4cQvWUpkjMUySaY4I23tV8Wn4zMwnAjjJk8Wi67bYouL5GJorPKNYtmCtxQOg2YZCoZtRkexNPHHracw8XuxyZP8PneTzYKgjPhBI1KS+d40MRy4P1DhJrE43HIB19gD4H5Y3xoMAArlTtIdLjr0pZwaU/pNEPBtbFC7rgfmWXL5xk1pLlS3myN8T0Uelz2cIzKN7fxZML8jE80zbHczZI4odEqDUqXtntUAgpXau3lV5AfnXuzzthzoDBwGYbK9l1EcHbt82V29aAuhpDjuYh2qcbADwbAhn3OquvRDAv8ni9Qxgg606JqsdNme9jAHACGolTWKB9Hb4IBHWJ2Gq0+IGetiphVVuBnAVEf2TQkWBkWpiOSohzK7NqGCuqWsyE0am4vgACITgX9Ke56HPsSZQsZGRUaCMrA7mR8C/TbzeiCukg3lHjiAQsvCzEwNZIIvqlHlNxCP7Eox0Yqd1cw4ko83Wpb3a44BfUQdj4K4GdHHxFpgnokdgqi3fseCYJFD7IrGMYwnADQDOIaLfKD895DxZzK4pMMnbIBaIRBQdntrVMz3XJbXKy5dqtfEAOROA6R7zsqcKn15eUxUCyZL1L4BRffKFQAjAwxK2cA7F7OdaYR08NU5W1wPtqLAQEe2ESfJ8E0ZjpGQZ7YFguHXt7yGirdXyFhkIJKQxAwF4DpWOHNxKDq082z0wkOFj4g2XLB0dFy46WwY6gsE1FxDRR6TDdb3NfnU+L4SponU904odp6j0skw8HJNY5gUB+Pjt0teUBoJ+u1yWHfCUls3UV5wGYJLsu8hOHFxgbbbYI2O8CznsYG5t9jkBZcwEI1tZd6cWi3e9F8A/MPN1AL4hB+mQPqrkuM1oSgpHLHSEQBJmVsZAGlCocZuVzC63el+Jh/0oM58OI236CTlYIzw+6lmJDpYT0W1WUjBtwDMpg2WedUn47P1tANZ74NVKUDgSwAcsPL/scdH/Ko+Vz43Qz2fmdbJHUo9cRyqR+DkwSfsolhvxMJgKpziABrUGwOt50gLR38LM75ND5IMZqae3UrLwdT+XGmwxVBsBfISZD4ehrX1UfuNhaG/K3h4ADzj0yssyBnx1IwjAov681NTTkX1xPYDrmfk4uXw+KIp6B2YchF1y6O6FaWbwkL2vGnV+LMN5fEDfQ1gQ0x6P36Te+CfEwPiOLRB8fABh1vb+vE32bsjcXA7gpwAQiyEBTC+3bg8eqTb4/Ilu3hzyHDcDmOaJa+pzPdNI5UANKZXoTkSvypzfxMyHApgIIzR1vHhoHW2i46te9XoiqlrMkOG9z5Lniz2hrRch5c/9GcmpwpqGrET0nMAzK33pdUSUNMFI7YJpTtATII7172IX2LMp8F4I1u0pTnWXiL9FAymXY9HuVK/8JI+50fe9LAybfYOhC0meRcqjgeRNuDIXxEhN8hSlV5z3LSJ6ow6WRDNleCmgxVwxPPbOYB5kGY5SHbhMmneDWEe/xlYe9Ha+PFsm3lUcbOe939IzLfs4yvPe6U9oNvB875+b/w/kGvCSdpYe1QAAAABJRU5ErkJggg==" alt="RENJIA 仁家科技"></span>
     <div>
       <h1>仁家科技 · 内部积分系统</h1>
-      <div class="tag">公平 · 公正 · 透明 · 本地自动保存</div>
+      <div class="tag">公平 · 公正 · 透明 · 云端实时同步</div>
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
@@ -319,7 +323,7 @@
       <label>导出内容（可复制 / 下载）</label>
       <textarea id="exportOut" readonly placeholder="点击上方任一导出按钮后，内容会显示在这里，可直接复制（下载被浏览器拦截时尤其有用）"></textarea>
       <div class="flexend"><button class="btn ghost sm" id="btnCopyExport">复制内容</button></div>
-      <p class="note">所有数据保存在本机浏览器（localStorage），刷新不丢失。换设备请用「导出/导入」。</p>
+      <p class="note">积分数据保存在<b>云端数据库</b>，全公司看到的是同一份、改完即时同步；本机同时留一份缓存，断网也能查看和导出。因此换设备<b>不需要</b>再做「导出/导入」，打开网址即可。（缓存键：<code>jf_system_v1</code>）</p>
     </div>
   </section>
 
@@ -425,9 +429,16 @@ function normalize(d){d=d||{};const base=JSON.parse(JSON.stringify(SEED));
 function load(){let raw=null;try{raw=storeGet(KEY);}catch(e){}
   if(raw){try{return normalize(JSON.parse(raw));}catch(e){}}
   const fresh=normalize({});storeSet(KEY,JSON.stringify(fresh));return fresh;}
-function save(obj){if(obj)D=obj;
+function save(obj){
+  if(obj)D=obj;
   storeSet(KEY,JSON.stringify(D));
-  const t=document.getElementById("saveState");if(t)t.textContent="已自动保存 ✓ "+new Date().toLocaleTimeString("zh-CN");}
+  /* 已启用云同步且是管理员时，状态文案交给 cloudSave() 统一维护，这里别抢着覆盖 */
+  if(!SB_ON||ROLE!=="admin"||!ADMIN_HASH_SESSION){
+    const t=document.getElementById("saveState");
+    if(t)t.textContent="已保存到本机 ✓ "+new Date().toLocaleTimeString("zh-CN");
+  }
+  cloudSave();
+}
 
 function uid(){return Date.now()*1000+Math.floor(Math.random()*1000);}
 function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");
@@ -585,6 +596,24 @@ document.getElementById("btnSaveWish").addEventListener("click",()=>{
     const oldArr=wishLines(D.wish);
     const added=wishLines(box.value).filter(s=>oldArr.indexOf(s)<0);
     if(!added.length){toast("没有新的心愿（这些已经在心愿墙上啦）");return;}
+    if(SB_ON){
+      /* 访客没有管理员口令，所以走专门的「只追加」接口：
+         数据库那边只允许追加，改不了、删不掉别人已有的心愿 */
+      setSync("提交中…","sync-busy");
+      cloudWishAppend(added).then(function(res){
+        return cloudPull().then(function(c){
+          if(c.data){D=normalize(c.data);storeSet(KEY,JSON.stringify(D));}
+          if(c.rev>CLOUD.rev)CLOUD.rev=c.rev;
+          CLOUD.ok=true;CLOUD.lastSync=Date.now();
+          renderAll();setSync("已同步 ✓ "+ts(),"sync-ok");
+          toast("已加入心愿墙 +"+((res&&res.added)||added.length)+" 条 ✍️");
+        });
+      }).catch(function(e){
+        setSync("提交失败（请稍后重试）","sync-off");
+        toast("提交失败："+e.message);
+      });
+      return;
+    }
     D.wish=oldArr.concat(added).join("\n");
     save();renderWish();toast("已加入心愿墙 +"+added.length+" 条 ✍️");
     return;
@@ -735,7 +764,9 @@ function showExport(name,content,type){
    源码里**不写明文**，只存这个口令的哈希常量——即使仓库公开托管，也不会直接暴露口令。
    定位说明：这是「防误操作 / 防随手点」的轻量 UI 门禁，**不是强安全机制**——
    纯前端应用的权限切换在开发者工具里一行代码就能绕过，真要防住必须上后端。
-   更换口令：运行 pwdHash("新口令")，把结果替换下面的 ADMIN_HASH 即可。 */
+   更换口令：运行 pwdHash("新口令")，把结果**同时**替换下面的 ADMIN_HASH 与
+   数据库函数 jf_admin_write 里的 v_expected——两处必须一致，
+   否则会出现「能登录、却同步不了」这种最难查的问题。 */
 const ADMIN_HASH="abb187a553160215";        /* 固定口令的哈希（不可逆） */
 const PWD_LEGACY_KEY="jf_admin_pwd_v1";     /* 旧版「自行设置密码」留下的键，启动时清理 */
 function pwdHash(s){
@@ -798,10 +829,253 @@ document.getElementById("btnAsVisitor").addEventListener("click",()=>applyRole("
 document.getElementById("btnAsAdmin").addEventListener("click",()=>{
   const hint=document.getElementById("pwdHint");
   const v=document.getElementById("adminPwd").value;
-  if(checkPwd(v)){applyRole("admin");}
+  if(checkPwd(v)){
+    /* 只把哈希留在本次会话里（不存明文），用于向云端推送；关闭标签页即失效 */
+    ADMIN_HASH_SESSION=ADMIN_HASH;
+    try{sessionStorage.setItem("jf_ph",ADMIN_HASH);}catch(e){}
+    const pe=document.getElementById("adminPwd");if(pe)pe.value="";
+    applyRole("admin");
+    onAdminLogin();
+  }
   else hint.textContent="密码错误，无法进入管理员模式。";
 });
 document.getElementById("btnSwitchRole").addEventListener("click",showRoleModal);
+
+/* ═══════════════ 云同步（Supabase 数据库）═══════════════
+   为什么需要它：数据若只存在每台电脑自己的浏览器里，同事打开网址看到的是
+   他自己浏览器里的空数据，永远看不到管理员的录入。这里把「一份共享数据」
+   放到云端数据库：打开页面先拉取，管理员改动后推送，其余人定时拉取更新。
+
+   配置：把下面两个常量填成 Supabase 项目的地址与 anon 公钥即可启用。
+   这两个值都是设计上可以公开的（会随页面源码一起发布，人人可见），
+   真正管权限的是数据库里的行级安全策略：
+     · 读取——所有人放开（同事要能看到）
+     · 写入——匿名密钥无权直接写表，只能调用带口令校验的数据库函数
+   留空 = 自动退化为纯本地模式：功能照旧，只是各设备之间不同步。 */
+var SB_URL="";                        /* 例：https://abcdefghijklm.supabase.co */
+var SB_KEY="";                        /* Supabase → Settings → API → anon public */
+var SB_TABLE="jf_state",SB_ROW="main";
+var SB_ON=!!(SB_URL&&SB_KEY);
+
+var CLOUD={ok:false,rev:-1,lastSync:0,pushing:false,err:""};
+/* 本机是否有「还没确认写进云端」的改动。
+   这是同步的安全阀：绝不能拿云端数据去覆盖一个有未上传改动的浏览器——
+   否则「登录后刚录完一条」那一瞬间，登录时拉回来的旧云端数据就把新录入冲掉了。
+   （这个坑是回归测试真跑出来的，不是猜的。） */
+var LOCAL_DIRTY=false;
+/* 本次会话内的管理员口令哈希（只存哈希、不存明文，关闭标签页即失效）。
+   推送云端需要它，否则一刷新页面就没法同步了。 */
+var ADMIN_HASH_SESSION="";
+try{ADMIN_HASH_SESSION=sessionStorage.getItem("jf_ph")||"";}catch(e){}
+/* 「本机有改动没推上去」的标记：断网时改动只留在本机，
+   下次载入据此判断「不能拿云端覆盖本机」，避免丢掉本地新数据。 */
+var PENDING_KEY=KEY+":pending";
+function ts(){return new Date().toLocaleTimeString("zh-CN");}
+function markPending(v){try{storeSet(PENDING_KEY,v?"1":"0");}catch(e){}}
+function hasPending(){try{return storeGet(PENDING_KEY)==="1";}catch(e){return false;}}
+/* 合并判断：内存里刚改过 / 防抖队列里还有 / 正在发 / 之前发失败过 */
+function isDirty(){return LOCAL_DIRTY||!!_pushTimer||CLOUD.pushing||hasPending();}
+
+function setSync(text,cls){
+  const t=document.getElementById("saveState");if(!t)return;
+  t.textContent=text;
+  t.classList.remove("sync-ok","sync-busy","sync-off");
+  if(cls)t.classList.add(cls);
+}
+function sbFetch(path,opts){
+  const o=opts||{};
+  o.headers=Object.assign({
+    "apikey":SB_KEY,
+    "Authorization":"Bearer "+SB_KEY,
+    "Content-Type":"application/json"},o.headers||{});
+  o.cache="no-store";
+  return fetch(SB_URL+path,o);
+}
+/* 把 Postgres / PostgREST 的报错转成人能看懂的一句话 */
+function sbErrMsg(status,body){
+  try{
+    const j=JSON.parse(body);
+    const m=j.message||j.hint||j.error_description||j.error||"";
+    if(m)return String(m).replace(/^[a-z_]+:\s*/,"");
+  }catch(e){}
+  if(status===401||status===403)return "无权访问（请检查数据库策略是否已执行）";
+  if(status===404)return "接口不存在（请检查 setup SQL 是否已执行）";
+  return "HTTP "+status;
+}
+/* 拉取云端数据。返回 {data, rev}；data 为 null 表示云端还没有内容 */
+async function cloudPull(){
+  const r=await sbFetch("/rest/v1/"+SB_TABLE+"?id=eq."+SB_ROW+"&select=data,rev,updated_at");
+  const txt=await r.text();
+  if(!r.ok)throw new Error(sbErrMsg(r.status,txt));
+  let arr=[];
+  try{arr=JSON.parse(txt);}catch(e){throw new Error("云端返回内容无法解析");}
+  if(!Array.isArray(arr)||!arr.length)return{data:null,rev:0};
+  const row=arr[0]||{},d=row.data;
+  const has=d&&typeof d==="object"&&!Array.isArray(d)&&Object.keys(d).length>0;
+  return{data:has?d:null,rev:Number(row.rev||0)};
+}
+/* 推送整份数据（服务端会校验口令哈希，不对直接拒绝） */
+async function cloudPush(payload){
+  if(!ADMIN_HASH_SESSION)throw new Error("需要管理员口令");
+  const body=JSON.stringify({p_pwd:ADMIN_HASH_SESSION,p_data:payload});
+  const o={method:"POST",body:body};
+  /* keepalive：页面刚好被关掉时，这次写入也能发完，不至于白改 */
+  if(body.length<60000)o.keepalive=true;
+  const r=await sbFetch("/rest/v1/rpc/jf_admin_write",o);
+  const txt=await r.text();
+  if(!r.ok)throw new Error(sbErrMsg(r.status,txt));
+  try{return JSON.parse(txt);}catch(e){return{};}
+}
+/* 访客追加心愿（只能追加，改不了已有内容） */
+async function cloudWishAppend(lines){
+  const r=await sbFetch("/rest/v1/rpc/jf_wish_append",{
+    method:"POST",body:JSON.stringify({p_lines:lines})});
+  const txt=await r.text();
+  if(!r.ok)throw new Error(sbErrMsg(r.status,txt));
+  try{return JSON.parse(txt);}catch(e){return{};}
+}
+/* 用云端数据覆盖本机前，先留一份本机备份，误操作可回退 */
+function backupLocal(tag){
+  try{storeSet(KEY+":backup:"+tag,JSON.stringify(D));}catch(e){}
+}
+function adoptCloud(data){
+  if(isDirty())return false;                 /* 有未上传改动时拒绝覆盖，返回 false 让调用方知道 */
+  backupLocal("before-cloud-pull");
+  D=normalize(data);storeSet(KEY,JSON.stringify(D));
+  renderAll();renderSettings();setOvRange(D.settings.defRange,false);
+  return true;
+}
+/* 管理员改动的推送：合并 400ms 内的连续改动，避免连点产生一堆重复写入 */
+var _pushTimer=null;
+function cloudSave(){
+  if(!SB_ON)return;
+  if(ROLE!=="admin"||!ADMIN_HASH_SESSION){
+    setSync("未同步 · 请以管理员身份登录","sync-off");return;
+  }
+  LOCAL_DIRTY=true;
+  clearTimeout(_pushTimer);
+  setSync("同步中…","sync-busy");
+  _pushTimer=setTimeout(function(){doPush();},400);
+}
+/* 返回 Promise<boolean>：调用方需要知道这次到底推成功没有 */
+function doPush(quiet){
+  _pushTimer=null;
+  if(!SB_ON||!ADMIN_HASH_SESSION)return Promise.resolve(false);
+  CLOUD.pushing=true;
+  return cloudPush(D).then(function(res){
+    CLOUD.rev=Number(res&&res.rev)||(CLOUD.rev+1);
+    CLOUD.ok=true;CLOUD.lastSync=Date.now();LOCAL_DIRTY=false;markPending(false);
+    setSync("已同步到云端 ✓ "+ts(),"sync-ok");
+    return true;
+  }).catch(function(e){
+    CLOUD.ok=false;CLOUD.err=e.message;markPending(true);
+    setSync("同步失败（本机已保存）","sync-off");
+    if(!quiet)toast("同步到云端失败："+e.message+"（数据已在本机，稍后自动重试）");
+    return false;
+  }).then(function(ok){CLOUD.pushing=false;return ok;});
+}
+/* 定时拉取：同事看不到别的设备上的改动，管理员也可能在手机上改 */
+var _pollTimer=null;
+function startPolling(){if(!SB_ON)return;clearInterval(_pollTimer);_pollTimer=setInterval(pollCloud,15000);}
+async function pollCloud(){
+  if(!SB_ON||CLOUD.pushing)return;
+  if(document.hidden)return;                                  /* 后台标签页不拉 */
+  const rm=document.getElementById("roleModal");
+  if(rm&&rm.style.display!=="none")return;                    /* 登录弹窗开着时不打断输密码 */
+  /* 本机还有没推上去的改动：先把改动推到云端，再谈拉取，
+     否则拉回来的旧数据会把本机刚录的内容盖掉 */
+  if(isDirty()){
+    if(_pushTimer||CLOUD.pushing)return;      /* 防抖队列 / 上一次推送还没结束，等它 */
+    await doPush(true);                       /* 静默重试，失败不弹提示，避免每次轮询都骚扰 */
+    if(isDirty()){setSync("本机有改动待上传（离线）","sync-off");return;}
+  }
+  try{
+    const c=await cloudPull();
+    CLOUD.ok=true;
+    /* 只认「更新的」版本：否则一个慢响应会用旧数据覆盖刚推上去的新数据 */
+    if(c.rev>CLOUD.rev&&c.data){
+      CLOUD.rev=c.rev;CLOUD.lastSync=Date.now();
+      if(!adoptCloud(c.data)){setSync("本机有改动待上传（离线）","sync-off");return;}
+      setSync("已同步最新数据 ✓ "+ts(),"sync-ok");
+      toast("已同步最新数据");
+    }else{
+      if(c.rev>CLOUD.rev)CLOUD.rev=c.rev;
+      setSync("已同步 ✓ "+ts(),"sync-ok");
+    }
+  }catch(e){
+    CLOUD.ok=false;CLOUD.err=e.message;
+    setSync("离线（本机数据照常可用）","sync-off");
+  }
+}
+/* 启动初始化：拉云端 → 有就用云端；本机有没推上去的改动则不动本机 */
+async function syncInit(){
+  if(!SB_ON){setSync("本地模式（未连接云数据库）","sync-off");return;}
+  setSync("同步中…","sync-busy");
+  try{
+    const c=await cloudPull();
+    CLOUD.ok=true;CLOUD.rev=c.rev;CLOUD.lastSync=Date.now();
+    if(isDirty()){
+      setSync("本机有未上传的改动 · 请管理员登录上传","sync-off");return;
+    }
+    if(!c.data){
+      setSync("云端还没有数据 · 请管理员登录上传","sync-off");return;
+    }
+    if(!adoptCloud(c.data)){setSync("本机有未上传的改动 · 请管理员登录上传","sync-off");return;}
+    setSync("已同步 ✓ "+ts(),"sync-ok");
+  }catch(e){
+    CLOUD.ok=false;CLOUD.err=e.message;
+    setSync("离线（本机数据照常可用）","sync-off");
+  }
+}
+/* 管理员登录成功后：云端空则上传本机；两边都有数据则让用户决定谁覆盖谁 */
+async function onAdminLogin(){
+  if(!SB_ON)return;
+  setSync("同步中…","sync-busy");
+  try{
+    const c=await cloudPull();
+    if(!c.data){
+      const res=await cloudPush(D);
+      CLOUD.rev=Number(res&&res.rev)||1;CLOUD.ok=true;CLOUD.lastSync=Date.now();
+      LOCAL_DIRTY=false;markPending(false);
+      setSync("已上传本机数据到云端 ✓ "+ts(),"sync-ok");
+      toast("本机数据已上传到云端，同事现在就能看到了");
+      return;
+    }
+    const localN=(D.events||[]).length,cloudN=(c.data.events||[]).length;
+    /* 本机有没推上去的改动 / 本机记录更多 → 必须问清楚用哪一份，绝不擅自覆盖 */
+    if(isDirty()||localN>cloudN){
+      if(confirm("本机有 "+localN+" 条积分记录，云端有 "+cloudN+" 条。\n\n"
+        +"【确定】用本机数据覆盖云端（同事会看到本机这一份）\n"
+        +"【取消】用云端数据覆盖本机（本机现有数据会自动备份，可回退）")){
+        const res=await cloudPush(D);
+        CLOUD.rev=Number(res&&res.rev)||(c.rev+1);CLOUD.ok=true;CLOUD.lastSync=Date.now();
+        LOCAL_DIRTY=false;markPending(false);
+        setSync("已用本机数据覆盖云端 ✓ "+ts(),"sync-ok");
+        toast("已上传本机数据");
+        return;
+      }
+    }
+    CLOUD.rev=c.rev;CLOUD.ok=true;CLOUD.lastSync=Date.now();markPending(false);
+    if(!adoptCloud(c.data)){setSync("已保留本机改动，未载入云端","sync-off");return;}
+    setSync("已载入云端最新数据 ✓ "+ts(),"sync-ok");
+    toast("已载入云端最新数据");
+  }catch(e){
+    CLOUD.ok=false;CLOUD.err=e.message;
+    setSync("连接云数据库失败（本机数据照常可用）","sync-off");
+    toast("连接云数据库失败："+e.message);
+  }
+}
+/* 页面切到后台/被关闭时，把还没推上去的最后一次改动立刻发出去 */
+function flushPendingPush(){
+  if(!_pushTimer)return;
+  clearTimeout(_pushTimer);_pushTimer=null;
+  doPush();
+}
+document.addEventListener("visibilitychange",function(){
+  if(document.hidden){flushPendingPush();}else{pollCloud();}
+});
+window.addEventListener("pagehide",flushPendingPush);
+window.addEventListener("focus",function(){if(!document.hidden)pollCloud();});
 
 /* init */
 document.getElementById("enDate").value=new Date().toISOString().slice(0,10);
@@ -847,6 +1121,10 @@ syncType();renderAll();
 /* 启动：若本会话已选过身份则沿用，否则弹出选择 */
 let _r=null;try{_r=sessionStorage.getItem("jf_role");}catch(e){}
 if(_r==="admin"||_r==="visitor")applyRole(_r);else showRoleModal();
+
+/* 云同步启动：先拉一次云端数据，再开启定时刷新（拿最新数据） */
+syncInit();
+startPolling();
 </script>
 </body>
 </html>
