@@ -147,8 +147,8 @@
         <span class="muted" id="ovSpan"></span>
       </div>
       <div class="filterbar">
-        <button class="btn ghost sm" id="btnExportWeek">导出报表(MD)</button>
-        <button class="btn ghost sm" id="btnExportCSV">导出明细(CSV)</button>
+        <button class="btn ghost sm no-visitor" id="btnExportWeek">导出报表(MD)</button>
+        <button class="btn ghost sm no-visitor" id="btnExportCSV">导出明细(CSV)</button>
         <span class="muted" id="ovInfo"></span>
       </div>
       <div class="stat" id="ovStat"></div>
@@ -291,7 +291,7 @@
         <tbody>
           <tr><td>宣讲 / 技能培训</td><td>5 分制（优/中/差）</td><td>5 / 2 / 0</td><td>周五下午 / 周六下午</td></tr>
           <tr><td>读书分享达人</td><td>优秀档</td><td>3</td><td>周一早会</td></tr>
-          <tr><td>读书打卡</td><td>每周打卡</td><td>默认 1（可改）</td><td>每周进行（每周 1 次）</td></tr>
+          <tr><td>读书打卡</td><td>每周打卡</td><td>默认 5（可改）</td><td>每周进行（建议每周 1 次，每次 +5 分）</td></tr>
           <tr><td>运动打卡</td><td>每次打卡</td><td>默认 2（可改）</td><td>每周进行（运动一次 +2 分）</td></tr>
           <tr><td>最佳检视者</td><td>5 分制（优/中/差）</td><td>5 / 3 / 0</td><td>项目检视时</td></tr>
           <tr><td>创新型建议者</td><td>5 分制（优/中/差）</td><td>5 / 3 / 0</td><td>提出建议时</td></tr>
@@ -327,12 +327,12 @@
   <section class="tab" id="t-settings">
     <div class="card">
       <h2>系统设置</h2>
-      <p class="muted" style="margin-top:0">把录音里未定死的项在此配置，全公司统一口径。修改即时保存。</p>
+      <p class="muted" style="margin-top:0">把尚未定死的项在此配置，全公司统一口径。修改即时保存。</p>
       <div class="row">
         <div>
-          <label>读书打卡每周分值</label>
+          <label>读书打卡每次分值</label>
           <input id="setCheckin" type="number" min="0" step="1">
-          <div class="note">每周打卡 1 次，默认 1 分/周（原按「每日 1 次」录太费人力，已改为每周汇总）。</div>
+          <div class="note">默认 5 分/次（原按「每日 1 分」录太费人力，已改为每周汇总，分值同步提到 5 分以保持激励强度）。</div>
         </div>
         <div>
           <label>运动打卡每次分值</label>
@@ -342,7 +342,7 @@
         <div>
           <label>积分兑换比（1 积分 = ? 元）</label>
           <input id="setRate" type="number" min="0" step="0.5">
-          <div class="note">录音原话：1 积分 = 1 元，公司报销，不发现金。</div>
+          <div class="note">规则依据：1 积分 = 1 元，公司报销，不发现金。</div>
         </div>
       </div>
       <div class="row">
@@ -373,7 +373,8 @@
       <ul class="muted" style="line-height:1.8">
         <li>「周二、三大话做积分」识别模糊，含义待确认（疑似「周二 / 简视 / 三大类」相关）。</li>
         <li>核算周期已定为<b>本月</b>（系统设置可改；筛选支持本周 / 本月 / 近 3 个月 / 近半年 / 近一年 / 全部）。</li>
-        <li>读书打卡已由「每日」改为<b>每周</b>：同人同周仅计 1 次，避免每日重复录入、防刷分。</li>
+        <li>读书打卡已由「每日」改为<b>每周</b>：<b>每周建议录入一次</b>。系统<b>不做次数限制</b>——录几次就计几次分，
+          请按实际打卡次数录入；如出现重复录入，可直接在「积分流水」里删除该条。</li>
       </ul>
     </div>
   </section>
@@ -401,7 +402,7 @@ const SEED={
   rewards:[{id:1,name:"抱枕",cost:50,img:""},{id:2,name:"水杯",cost:40,img:""}],
   redemptions:[],
   wish:"",
-  settings:{checkin:1, sport:2, rate:1, defRange:"month"}
+  settings:{checkin:5, sport:2, rate:1, defRange:"month"}
 };
 /* 存储容错：localStorage 在沙箱/隐私模式/被禁用时会抛错，必须有内存兜底，否则整段脚本会中断、按钮全部失效 */
 let _mem={};
@@ -410,7 +411,14 @@ function storeGet(k){try{return localStorage.getItem(k);}catch(e){return (k in _
 function storeSet(k,v){try{localStorage.setItem(k,v);}catch(e){_mem[k]=v;}}
 function normalize(d){d=d||{};const base=JSON.parse(JSON.stringify(SEED));
   d=Object.assign(base,d);
-  d.settings=Object.assign({checkin:1,sport:2,rate:1,defRange:"month"},d.settings||{});
+  d.settings=Object.assign({checkin:5,sport:2,rate:1,defRange:"month"},d.settings||{});
+  /* 一次性迁移：读书打卡「每日 1 分」→「每周 5 分」。
+     已装过旧版的电脑，localStorage 里存着旧默认值 checkin=1（当时无人改过它），
+     若只改代码默认值，老设备仍按 1 分算 → 这里自动对齐一次，之后不再干预用户的自定义值。 */
+  if(d.settings.checkinMigrated!==true){
+    if(d.settings.checkin===1)d.settings.checkin=5;
+    d.settings.checkinMigrated=true;
+  }
   d.members=d.members||[];d.events=d.events||[];d.rewards=d.rewards||[];d.redemptions=d.redemptions||[];
   if(typeof d.wish!=="string")d.wish="";
   return d;}
@@ -501,7 +509,7 @@ function syncType(){const v=enType.value;
     setTier(arr[0]);
   }
   else if(v==="读书分享达人"){tierBox.style.display="none";enScore.value=3;hint.textContent="⏰ 建议时间：周一早会（优秀 3 分）";}
-  else if(v==="读书打卡"){tierBox.style.display="none";enScore.value=D.settings.checkin;hint.textContent="⏰ 每周进行（每周 "+D.settings.checkin+" 分，每周仅计 1 次）";}
+  else if(v==="读书打卡"){tierBox.style.display="none";enScore.value=D.settings.checkin;hint.textContent="⏰ 每周进行（每次 +"+D.settings.checkin+" 分，建议每周录 1 次；录几次计几次，系统不限制）";}
   else if(v==="运动打卡"){tierBox.style.display="none";const sp=(D.settings.sport!=null?D.settings.sport:2);enScore.value=sp;hint.textContent="⏰ 每周进行（运动一次 +"+sp+" 分）";}
   else {tierBox.style.display="none";enScore.value=0;hint.textContent="";}
 }
@@ -805,7 +813,7 @@ function renderSettings(){
 }
 document.getElementById("btnSaveSet").addEventListener("click",()=>{
   if(!guard())return;
-  D.settings.checkin=parseInt(document.getElementById("setCheckin").value||"1",10)||0;
+  D.settings.checkin=parseInt(document.getElementById("setCheckin").value||"5",10)||0;
   D.settings.sport=parseInt(document.getElementById("setSport").value||"2",10)||0;
   D.settings.rate=parseFloat(document.getElementById("setRate").value||"1")||0;
   D.settings.defRange=document.getElementById("setRange").value;
