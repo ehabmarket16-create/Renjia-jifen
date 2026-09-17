@@ -768,8 +768,10 @@ function showExport(name,content,type){
    定位说明：这是「防误操作 / 防随手点」的轻量 UI 门禁，**不是强安全机制**——
    纯前端应用的权限切换在开发者工具里一行代码就能绕过，真要防住必须上后端。
    更换口令：运行 pwdHash("新口令")，把结果**同时**替换下面的 ADMIN_HASH 与
-   数据库函数 jf_admin_write 里的 v_expected——两处必须一致，
-   否则会出现「能登录、却同步不了」这种最难查的问题。 */
+   服务器端 server/config.json 里的 adminHash —— 两处必须一致，
+   否则会出现「能登录、却保存不了」这种最难查的问题。
+   （注意：口令只在服务器端校验；这个常量只用于前端立刻给反馈，
+     即使有人改了页面里的常量也写不进服务器。） */
 const ADMIN_HASH="abb187a553160215";        /* 固定口令的哈希（不可逆） */
 const PWD_LEGACY_KEY="jf_admin_pwd_v1";     /* 旧版「自行设置密码」留下的键，启动时清理 */
 function pwdHash(s){
