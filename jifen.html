@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>仁家科技 · 内部积分系统</title>
+<style>
+  :root{
+    --bg:#f5f7fa; --card:#ffffff; --ink:#1f2933; --sub:#6b7280;
+    --line:#e5e9f0; --brand:#2563eb; --brand2:#1d4ed8; --ok:#16a34a;
+    --warn:#d97706; --red:#dc2626; --chip:#eef2ff; --chipink:#3730a3;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",Segoe UI,sans-serif;
+    background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5}
+  header{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;padding:16px 22px;
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  header h1{margin:0;font-size:19px;font-weight:700}
+  header .tag{font-size:12px;opacity:.9}
+  header .brand{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  /* 品牌 logo：去掉白底板，直接用透明 PNG 露在蓝底上 */
+  header .logo-plate{display:inline-flex;align-items:center}
+  header .logo-plate img{height:32px;width:auto;display:block}
+  /* 「切换身份」用朴素小按钮（不再用 logo 图标，简单直观） */
+  header .switch-btn{background:#fff;color:var(--brand);border:1px solid rgba(255,255,255,.7);
+    padding:5px 12px;font-size:12px;font-weight:600;border-radius:8px;cursor:pointer;white-space:nowrap}
+  header .switch-btn:hover{background:var(--chip)}
+  @media (max-width:560px){header .logo-plate img{height:26px}}
+  nav{display:flex;gap:4px;background:var(--card);border-bottom:1px solid var(--line);
+    padding:0 14px;flex-wrap:wrap}
+  nav button{background:none;border:none;border-bottom:3px solid transparent;padding:12px 14px;
+    cursor:pointer;font-size:14px;color:var(--sub);font-weight:600}
+  nav button.active{color:var(--brand);border-bottom-color:var(--brand)}
+  main{padding:18px;max-width:1080px;margin:0 auto}
+  .tab{display:none}
+  .tab.active{display:block}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px;
+    box-shadow:0 1px 3px rgba(16,24,40,.04)}
+  .card h2{margin:0 0 14px;font-size:16px}
+  label{display:block;font-size:13px;color:var(--sub);margin:10px 0 4px;font-weight:600}
+  input,select,textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;
+    font-size:14px;font-family:inherit;background:#fff;color:var(--ink)}
+  textarea{resize:vertical;min-height:70px}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .row > div{flex:1;min-width:160px}
+  .btn{background:var(--brand);color:#fff;border:none;border-radius:8px;padding:10px 16px;
+    cursor:pointer;font-size:14px;font-weight:600}
+  .btn:hover{background:var(--brand2)}
+  .btn.sm{padding:6px 10px;font-size:12px}
+  .btn.ghost{background:#fff;color:var(--brand);border:1px solid var(--brand)}
+  .btn.danger{background:#fff;color:var(--red);border:1px solid var(--red)}
+  .btn.warn{background:var(--warn);color:#fff;border:none}
+  .tiers{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .tier{padding:8px 14px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:#fff;font-weight:600}
+  .tier.sel{background:var(--chip);border-color:var(--brand);color:var(--chipink)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line)}
+  th{color:var(--sub);font-weight:600;background:#fafbfc}
+  tr:hover td{background:#fafbff}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;background:var(--chip);color:var(--chipink)}
+  .stat{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+  .stat .box{flex:1;min-width:120px;background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .stat .box .n{font-size:22px;font-weight:700}
+  .stat .box .l{font-size:12px;color:var(--sub)}
+  .reward{display:flex;gap:14px;align-items:center;background:#fff;border:1px solid var(--line);
+    border-radius:12px;padding:12px;margin-bottom:10px}
+  .reward img{width:72px;height:72px;object-fit:cover;border-radius:8px;background:#f0f2f5}
+  .reward .info{flex:1}
+  .reward .info .nm{font-weight:700}
+  .muted{color:var(--sub);font-size:12px}
+  .toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);background:#111827;color:#fff;
+    padding:10px 18px;border-radius:8px;font-size:13px;opacity:0;transition:.25s;z-index:50;pointer-events:none}
+  .toast.show{opacity:1}
+  .flexend{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px}
+  .filterbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  /* 周期维度按钮组：把"全部/本周/本月/近3个月/近半年/近一年"直接铺开，避免藏在下拉里看不见 */
+  .ranges{display:flex;gap:6px;flex-wrap:wrap}
+  .rbtn{padding:6px 12px;border:1px solid var(--line);background:#fff;border-radius:999px;
+    cursor:pointer;font-size:12px;font-weight:600;color:var(--sub);font-family:inherit}
+  .rbtn:hover{border-color:var(--brand);color:var(--brand)}
+  .rbtn.sel{background:var(--chip);border-color:var(--brand);color:var(--chipink)}
+  .rbtn.sel:hover{color:var(--chipink)}
+  .breakdown{font-size:12px;color:var(--sub)}
+  .empty{color:var(--sub);text-align:center;padding:24px;font-size:13px}
+  code{background:#f1f5f9;padding:1px 6px;border-radius:4px;font-size:12px}
+  .note{font-size:12px;color:var(--sub);margin-top:8px}
+  .modal{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;z-index:100}
+  .modal-box{background:#fff;border-radius:14px;padding:24px;width:min(360px,92vw);box-shadow:0 10px 40px rgba(0,0,0,.2)}
+  .modal-box h2{margin:0 0 6px}
+  body[data-role="visitor"] .no-visitor,
+  body[data-role="visitor"] [data-del],
+  body[data-role="visitor"] [data-e]{display:none!important}
+  body[data-role="visitor"] input,
+  body[data-role="visitor"] select,
+  body[data-role="visitor"] textarea{pointer-events:none;background:#f8fafc;color:#64748b}
+  /* 身份切换弹窗必须保持可交互：否则切到访客后，弹窗里的密码框被上面的 pointer-events:none 禁用，导致无法输密码 / 无法切回管理员 */
+  body[data-role="visitor"] .modal input,
+  body[data-role="visitor"] .modal select,
+  body[data-role="visitor"] .modal textarea{pointer-events:auto;background:#fff;color:var(--ink)}
+  /* 心愿墙是访客唯一可写的区域：豁免只读保护，让访客也能填写（其余输入框仍锁定） */
+  body[data-role="visitor"] #wish{pointer-events:auto;background:#fff;color:var(--ink)}
+  .wish{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px dashed var(--line)}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <span class="logo-plate"><img src="data:image/png;base64,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" alt="RENJIA 仁家科技"></span>
+    <div>
+      <h1>仁家科技 · 内部积分系统</h1>
+      <div class="tag">公平 · 公正 · 透明 · 本地自动保存</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="tag" id="roleChip">身份：管理员 🔑</div>
+    <button class="switch-btn" id="btnSwitchRole" title="切换身份 / 登录">切换身份</button>
+    <div class="tag" id="saveState">已自动保存</div>
+  </div>
+</header>
+
+<nav id="nav">
+  <button data-t="overview" class="active">概览榜单</button>
+  <button data-t="entry" class="no-visitor">积分录入</button>
+  <button data-t="members" class="no-visitor">人员管理</button>
+  <button data-t="rewards">礼品兑换</button>
+  <button data-t="log">积分流水</button>
+  <button data-t="redeem">兑换记录</button>
+  <button data-t="rules">规则说明</button>
+  <button data-t="settings" class="no-visitor">系统设置</button>
+</nav>
+
+<main>
+  <!-- 概览 -->
+  <section class="tab active" id="t-overview">
+    <div class="card">
+      <h2>积分总榜</h2>
+      <div class="filterbar">
+        <span class="muted">核算周期：</span>
+        <div class="ranges" id="ovRange">
+          <button class="rbtn" data-r="all">全部</button>
+          <button class="rbtn" data-r="week">本周</button>
+          <button class="rbtn sel" data-r="month">本月</button>
+          <button class="rbtn" data-r="q3">近 3 个月</button>
+          <button class="rbtn" data-r="h6">近半年</button>
+          <button class="rbtn" data-r="y1">近一年</button>
+        </div>
+        <span class="muted" id="ovSpan"></span>
+      </div>
+      <div class="filterbar">
+        <button class="btn ghost sm" id="btnExportWeek">导出报表(MD)</button>
+        <button class="btn ghost sm" id="btnExportCSV">导出明细(CSV)</button>
+        <span class="muted" id="ovInfo"></span>
+      </div>
+      <div class="stat" id="ovStat"></div>
+      <table id="rankTable">
+        <thead><tr><th>#</th><th>姓名</th><th>总分</th><th>可用分</th><th>累计兑换</th><th>分项</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="empty" id="ovEmpty" style="display:none">暂无数据，去「积分录入」添加第一笔吧。</div>
+    </div>
+  </section>
+
+  <!-- 录入 -->
+  <section class="tab" id="t-entry">
+    <div class="card">
+      <h2>录入积分</h2>
+      <div class="row">
+        <div>
+          <label>选择人员</label>
+          <select id="enMember"></select>
+          <div class="note">没有？去「人员管理」新增。</div>
+        </div>
+        <div>
+          <label>积分事项</label>
+          <select id="enType">
+            <option value="宣讲/技能培训">宣讲 / 技能培训</option>
+            <option value="读书分享达人">读书分享达人</option>
+            <option value="读书打卡">读书打卡（每周）</option>
+            <option value="运动打卡">运动打卡（每周）</option>
+            <option value="最佳检视者">最佳检视者</option>
+            <option value="创新型建议者">创新型建议者</option>
+            <option value="自定义">自定义事项</option>
+          </select>
+          <div class="note" id="typeHint"></div>
+        </div>
+      </div>
+      <div id="tierBox">
+        <label id="tierLabel">评分档位（5 分制：优 5 / 中 2 / 差 0）</label>
+        <div class="tiers" id="tiers">
+          <div class="tier" data-v="5">优 +5</div>
+          <div class="tier" data-v="2">中 +2</div>
+          <div class="tier" data-v="0">差 0</div>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>积分数（默认按档位，可改）</label>
+          <input id="enScore" type="number" value="5">
+        </div>
+        <div>
+          <label>日期</label>
+          <input id="enDate" type="date">
+        </div>
+      </div>
+      <label>备注（可选）</label>
+      <input id="enNote" placeholder="如：周五宣讲《XX主题》">
+      <div class="flexend">
+        <button class="btn no-visitor" id="btnAdd">提交录入</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 人员 -->
+  <section class="tab" id="t-members">
+    <div class="card">
+      <h2>人员管理</h2>
+      <div class="row">
+        <div><label>新增员工姓名</label><input id="memName" placeholder="输入姓名"></div>
+        <div style="flex:0"><label>&nbsp;</label><button class="btn no-visitor" id="btnAddMem">+ 新增</button></div>
+      </div>
+      <table style="margin-top:14px">
+        <thead><tr><th>姓名</th><th>状态</th><th>总分</th><th>操作</th></tr></thead>
+        <tbody id="memBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 礼品 -->
+  <section class="tab" id="t-rewards">
+    <div class="card">
+      <h2>兑换</h2>
+      <div class="row">
+        <div><label>选择人员</label><select id="rdMember"></select></div>
+        <div><label>礼品名称</label><input id="rdName" placeholder="如：电影票"></div>
+        <div><label>消耗积分</label><input id="rdCost" type="number" value="0"></div>
+      </div>
+      <div class="note" id="rdHint"></div>
+      <div class="flexend"><button class="btn warn no-visitor" id="btnRedeem">确认兑换（扣减积分）</button></div>
+    </div>
+    <div class="card">
+      <h2>心愿墙（收集大家想要的礼物）</h2>
+      <textarea id="wish" placeholder="每行一个，如：电影票、奶茶、蓝牙耳机……"></textarea>
+      <div class="note" id="wishHint" style="display:none">✍️ 写下你想要什么礼物（每行一个），提交后会<strong>追加</strong>到心愿墙，不会影响别人已写的内容。</div>
+      <div class="flexend"><button class="btn ghost sm" id="btnSaveWish">保存心愿</button></div>
+      <div id="wishList" style="margin-top:10px"></div>
+    </div>
+  </section>
+
+  <!-- 流水 -->
+  <section class="tab" id="t-log">
+    <div class="card">
+      <h2>积分流水</h2>
+      <div class="filterbar">
+        <span class="muted">筛选：</span>
+        <select id="logRange" style="width:auto">
+          <option value="all">全部</option><option value="week">本周</option><option value="month">本月</option>
+          <option value="q3">近 3 个月</option><option value="h6">近半年</option><option value="y1">近一年</option>
+        </select>
+        <select id="logMember" style="width:auto"><option value="">全部人员</option></select>
+        <select id="logType" style="width:auto"><option value="">全部事项</option></select>
+        <input id="logKw" type="search" placeholder="搜索来源 / 备注 / 姓名" style="width:auto;min-width:190px">
+        <button class="btn ghost sm" id="btnLogReset">重置</button>
+        <span class="muted" id="logInfo" style="font-size:12px"></span>
+      </div>
+      <table>
+        <thead><tr><th>日期</th><th>姓名</th><th>事项</th><th>积分来源</th><th>分值</th><th>备注</th><th>操作</th></tr></thead>
+        <tbody id="logBody"></tbody>
+      </table>
+      <div class="empty" id="logEmpty" style="display:none">暂无记录。</div>
+    </div>
+  </section>
+
+  <!-- 兑换记录 -->
+  <section class="tab" id="t-redeem">
+    <div class="card">
+      <h2>兑换记录</h2>
+      <table>
+        <thead><tr><th>日期</th><th>姓名</th><th>礼品</th><th>消耗积分</th><th>报销(元)</th></tr></thead>
+        <tbody id="rdBody"></tbody>
+      </table>
+      <div class="empty" id="rdEmpty" style="display:none">暂无兑换。</div>
+    </div>
+  </section>
+
+  <!-- 规则 -->
+  <section class="tab" id="t-rules">
+    <div class="card">
+      <h2>积分规则</h2>
+      <table>
+        <thead><tr><th>事项</th><th>评分</th><th>分值</th><th>时间规律</th></tr></thead>
+        <tbody>
+          <tr><td>宣讲 / 技能培训</td><td>5 分制（优/中/差）</td><td>5 / 2 / 0</td><td>周五下午 / 周六下午</td></tr>
+          <tr><td>读书分享达人</td><td>优秀档</td><td>3</td><td>周一早会</td></tr>
+          <tr><td>读书打卡</td><td>每周打卡</td><td>默认 1（可改）</td><td>每周进行（每周 1 次）</td></tr>
+          <tr><td>运动打卡</td><td>每次打卡</td><td>默认 2（可改）</td><td>每周进行（运动一次 +2 分）</td></tr>
+          <tr><td>最佳检视者</td><td>5 分制（优/中/差）</td><td>5 / 3 / 0</td><td>项目检视时</td></tr>
+          <tr><td>创新型建议者</td><td>5 分制（优/中/差）</td><td>5 / 3 / 0</td><td>提出建议时</td></tr>
+          <tr><td>自定义事项</td><td>手工录入</td><td>手工填</td><td>—</td></tr>
+        </tbody>
+      </table>
+      <p class="muted">原则：只奖不罚，最差为 0，不扣分。</p>
+    </div>
+    <div class="card">
+      <h2>兑换规则</h2>
+      <ul class="muted" style="line-height:1.8">
+        <li><b>1 积分 = 1 元</b>；攒够积分后公司报销对应金额。</li>
+        <li>员工自行挑选等值礼物（电影票、奶茶等），<b>不直接发放现金</b>。</li>
+        <li>先收集「心愿墙」里大家想要的礼物，再配置到礼品库。</li>
+        <li>兑换时自动扣减「可用分」= 总积分 − 已兑换积分。</li>
+      </ul>
+    </div>
+    <div class="card no-visitor">
+      <h2>数据管理</h2>
+      <div class="row">
+        <div><button class="btn ghost" id="btnExportJSON">导出全部数据(JSON)</button></div>
+        <div><button class="btn danger no-visitor" id="btnImportJSON">导入JSON</button><input id="fileJSON" type="file" accept="application/json" style="display:none"></div>
+        <div><button class="btn danger no-visitor" id="btnClear">清空全部数据</button></div>
+      </div>
+      <label>导出内容（可复制 / 下载）</label>
+      <textarea id="exportOut" readonly placeholder="点击上方任一导出按钮后，内容会显示在这里，可直接复制（下载被浏览器拦截时尤其有用）"></textarea>
+      <div class="flexend"><button class="btn ghost sm" id="btnCopyExport">复制内容</button></div>
+      <p class="note">所有数据保存在本机浏览器（localStorage），刷新不丢失。换设备请用「导出/导入」。</p>
+    </div>
+  </section>
+
+  <!-- 设置 -->
+  <section class="tab" id="t-settings">
+    <div class="card">
+      <h2>系统设置</h2>
+      <p class="muted" style="margin-top:0">把录音里未定死的项在此配置，全公司统一口径。修改即时保存。</p>
+      <div class="row">
+        <div>
+          <label>读书打卡每周分值</label>
+          <input id="setCheckin" type="number" min="0" step="1">
+          <div class="note">每周打卡 1 次，默认 1 分/周（原按「每日 1 次」录太费人力，已改为每周汇总）。</div>
+        </div>
+        <div>
+          <label>运动打卡每次分值</label>
+          <input id="setSport" type="number" min="0" step="1">
+          <div class="note">运动一次 +2 分（默认 2 分/次，可改）。</div>
+        </div>
+        <div>
+          <label>积分兑换比（1 积分 = ? 元）</label>
+          <input id="setRate" type="number" min="0" step="0.5">
+          <div class="note">录音原话：1 积分 = 1 元，公司报销，不发现金。</div>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>默认核算周期</label>
+          <select id="setRange">
+            <option value="week">本周</option>
+            <option value="month">本月</option>
+            <option value="q3">近 3 个月</option>
+            <option value="h6">近半年</option>
+            <option value="y1">近一年</option>
+            <option value="all">全部</option>
+          </select>
+          <div class="note">打开概览时默认展示的周期。近 3 个月 / 近半年 / 近一年为从今天往回滚动计算。</div>
+        </div>
+      </div>
+      <div class="flexend"><button class="btn no-visitor" id="btnSaveSet">保存设置</button></div>
+    </div>
+    <div class="card">
+      <h2>歧义说明</h2>
+      <ul class="muted" style="line-height:1.8">
+        <li>「周二、三大话做积分」识别模糊，含义待确认（疑似「周二 / 简视 / 三大类」相关）。</li>
+        <li>核算周期已定为<b>本月</b>（系统设置可改；筛选支持本周 / 本月 / 近 3 个月 / 近半年 / 近一年 / 全部）。</li>
+        <li>读书打卡已由「每日」改为<b>每周</b>：同人同周仅计 1 次，避免每日重复录入、防刷分。</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal" id="roleModal">
+  <div class="modal-box">
+    <h2>选择身份</h2>
+    <p class="muted" style="margin:4px 0 14px">管理员拥有全部操作权限；访客仅可预览，不能录入 / 修改 / 兑换 / 删除。</p>
+    <button class="btn ghost" id="btnAsVisitor" style="width:100%;margin-bottom:12px">进入访客模式（仅预览）</button>
+    <label>管理员密码</label>
+    <input id="adminPwd" type="password" placeholder="请输入管理员密码">
+    <div class="flexend"><button class="btn" id="btnAsAdmin">进入管理员模式</button></div>
+    <div class="note" id="pwdHint"></div>
+  </div>
+</div>
+
+<script>
+const KEY="jf_system_v1";
+const SEED={
+  members:[{id:1,name:"示例员工A",active:true},{id:2,name:"示例员工B",active:true}],
+  events:[],
+  rewards:[{id:1,name:"抱枕",cost:50,img:""},{id:2,name:"水杯",cost:40,img:""}],
+  redemptions:[],
+  wish:"",
+  settings:{checkin:1, sport:2, rate:1, defRange:"month"}
+};
+/* 存储容错：localStorage 在沙箱/隐私模式/被禁用时会抛错，必须有内存兜底，否则整段脚本会中断、按钮全部失效 */
+let _mem={};
+let D=load();
+function storeGet(k){try{return localStorage.getItem(k);}catch(e){return (k in _mem)?_mem[k]:null;}}
+function storeSet(k,v){try{localStorage.setItem(k,v);}catch(e){_mem[k]=v;}}
+function normalize(d){d=d||{};const base=JSON.parse(JSON.stringify(SEED));
+  d=Object.assign(base,d);
+  d.settings=Object.assign({checkin:1,sport:2,rate:1,defRange:"month"},d.settings||{});
+  d.members=d.members||[];d.events=d.events||[];d.rewards=d.rewards||[];d.redemptions=d.redemptions||[];
+  if(typeof d.wish!=="string")d.wish="";
+  return d;}
+function load(){let raw=null;try{raw=storeGet(KEY);}catch(e){}
+  if(raw){try{return normalize(JSON.parse(raw));}catch(e){}}
+  const fresh=normalize({});storeSet(KEY,JSON.stringify(fresh));return fresh;}
+function save(obj){if(obj)D=obj;
+  storeSet(KEY,JSON.stringify(D));
+  const t=document.getElementById("saveState");if(t)t.textContent="已自动保存 ✓ "+new Date().toLocaleTimeString("zh-CN");}
+
+function uid(){return Date.now()*1000+Math.floor(Math.random()*1000);}
+function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),1800);}
+
+function weekRange(){const n=new Date();const day=(n.getDay()+6)%7;const mon=new Date(n);mon.setDate(n.getDate()-day);mon.setHours(0,0,0,0);
+  const sun=new Date(mon);sun.setDate(mon.getDate()+7);return[mon,sun];}
+function monthRange(){const n=new Date();const f=new Date(n.getFullYear(),n.getMonth(),1);const l=new Date(n.getFullYear(),n.getMonth()+1,1);return[f,l];}
+/* 往前推 N 个自然月；日号溢出时夹到该月最后一天（如 5/31 → 2/28），避免 setMonth 跳到 3 月 */
+function shiftMonths(base,back){
+  const d=new Date(base.getFullYear(),base.getMonth()-back,1);
+  const last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+  d.setDate(Math.min(base.getDate(),last));d.setHours(0,0,0,0);return d;}
+/* 时间区间统一出口：返回 [起, 止)，"all" 返回 null
+   本周/本月 = 自然周期；近3个月/半年/一年 = 从今天往回滚动计算 */
+function rangeBounds(r){
+  if(r==="all")return null;
+  if(r==="week")return weekRange();
+  if(r==="month")return monthRange();
+  const back={"q3":3,"h6":6,"y1":12}[r];
+  if(back){
+    const n=new Date();
+    const a=shiftMonths(n,back);
+    const b=new Date(n);b.setHours(0,0,0,0);b.setDate(b.getDate()+1); // 含今天
+    return[a,b];}
+  return monthRange();}
+function inRange(d,r){const b=rangeBounds(r);if(!b)return true;const x=new Date(d+"T00:00:00");return x>=b[0]&&x<b[1];}
+/* 区间中文名，用于筛选按钮 / 报表标题 */
+function rangeText(r){return{all:"全部",week:"本周",month:"本月",q3:"近 3 个月",h6:"近半年",y1:"近一年"}[r]||r;}
+/* 区间起止的展示文案，如「2026/6/17 ~ 2026/9/17」 */
+function rangeSpan(r){
+  if(r==="all")return "全部记录";
+  const[a,b]=rangeBounds(r);
+  const e=new Date(b.getTime()-864e5);
+  return fmt(a)+" ~ "+fmt(e);}
+function fmt(d){return new Date(d).toLocaleDateString("zh-CN");}
+
+/* 概览「核算周期」：按钮组状态 + 唯一取值出口
+   注：原来是一个 <select>，档位藏在下拉里看不全，改成铺开的按钮组后六个维度一眼可见 */
+const RANGES=["all","week","month","q3","h6","y1"];
+let OV_RANGE="month";
+function ovRangeVal(){return OV_RANGE;}
+function setOvRange(v,doRender){
+  OV_RANGE=RANGES.includes(v)?v:"month";
+  const box=document.getElementById("ovRange");
+  if(box)box.querySelectorAll("[data-r]").forEach(b=>b.classList.toggle("sel",b.dataset.r===OV_RANGE));
+  if(doRender!==false)renderRank();
+}
+
+/* nav */
+document.getElementById("nav").addEventListener("click",e=>{
+  if(e.target.dataset.t){document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+    e.target.classList.add("active");
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+    document.getElementById("t-"+e.target.dataset.t).classList.add("active");
+    renderAll();}
+});
+
+/* ===== 录入 ===== */
+const enType=document.getElementById("enType"),enScore=document.getElementById("enScore"),
+  tierBox=document.getElementById("tierBox"),tiers=document.getElementById("tiers");
+const TIERS={
+  "宣讲/技能培训":[5,2,0],
+  "最佳检视者":[5,3,0],
+  "创新型建议者":[5,3,0]
+};
+function syncType(){const v=enType.value;
+  const hint=document.getElementById("typeHint");
+  const tierLabel=document.getElementById("tierLabel");
+  if(TIERS[v]){const arr=TIERS[v];
+    tierBox.style.display="block";
+    tiers.innerHTML=arr.map(x=>{const lab=x===5?"优":(x===0?"差":"中");return `<div class="tier" data-v="${x}">${lab} +${x}</div>`;}).join("");
+    const desc=arr.map(x=>{const lab=x===5?"优":(x===0?"差":"中");return lab+x;}).join(" / ");
+    const time=v==="宣讲/技能培训"?"⏰ 建议时间：周五下午 / 周六下午 ":"";
+    tierLabel.textContent="评分档位（"+desc+"）";
+    hint.textContent=time+"（"+desc+"）";
+    setTier(arr[0]);
+  }
+  else if(v==="读书分享达人"){tierBox.style.display="none";enScore.value=3;hint.textContent="⏰ 建议时间：周一早会（优秀 3 分）";}
+  else if(v==="读书打卡"){tierBox.style.display="none";enScore.value=D.settings.checkin;hint.textContent="⏰ 每周进行（每周 "+D.settings.checkin+" 分，每周仅计 1 次）";}
+  else if(v==="运动打卡"){tierBox.style.display="none";const sp=(D.settings.sport!=null?D.settings.sport:2);enScore.value=sp;hint.textContent="⏰ 每周进行（运动一次 +"+sp+" 分）";}
+  else {tierBox.style.display="none";enScore.value=0;hint.textContent="";}
+}
+function setTier(v){tiers.querySelectorAll(".tier").forEach(t=>t.classList.toggle("sel",+t.dataset.v===v));enScore.value=v;}
+tiers.addEventListener("click",e=>{if(e.target.dataset.v!==undefined)setTier(+e.target.dataset.v);});
+enType.addEventListener("change",syncType);
+
+document.getElementById("btnAdd").addEventListener("click",()=>{
+  if(!guard())return;
+  const mid=+document.getElementById("enMember").value;
+  if(!mid){toast("请先选择人员");return;}
+  const score=parseInt(enScore.value||"0",10);
+  const m=D.members.find(x=>x.id===mid);
+  D.events.push({id:uid(),memberId:mid,memberName:m.name,type:enType.value,source:"",
+    score,date:document.getElementById("enDate").value,note:document.getElementById("enNote").value,ts:Date.now()});
+  save();toast("已录入 +"+score+" 分");renderAll();
+  document.getElementById("enNote").value="";
+});
+
+/* ===== 人员 ===== */
+document.getElementById("btnAddMem").addEventListener("click",()=>{
+  if(!guard())return;
+  const n=document.getElementById("memName").value.trim();if(!n){toast("请输入姓名");return;}
+  if(D.members.some(x=>x.name===n)){toast("「"+n+"」已存在");return;}
+  D.members.push({id:uid(),name:n,active:true});save();
+  document.getElementById("memName").value="";toast("已新增 "+n);renderAll();
+});
+function delMem(id){if(!guard())return;const m=D.members.find(x=>x.id===id);
+  if(!confirm("确认删除「"+m.name+"」？其历史积分记录将保留但不再出现在人员列表。"))return;
+  D.members=D.members.filter(x=>x.id!==id);save();toast("已删除");renderAll();}
+
+/* 兑换 */
+function refreshRdHint(){const mid=+document.getElementById("rdMember").value;const cost=parseInt(document.getElementById("rdCost").value||"0",10);
+  const hint=document.getElementById("rdHint");
+  if(!mid){hint.textContent="";return;}
+  const av=avail(mid);
+  hint.textContent="可用分 "+av+" ，本次需 "+cost+" 分 → "+(av>=cost?"✅ 可兑换（报销 "+(cost*D.settings.rate)+" 元）":"❌ 积分不足");
+}
+document.getElementById("rdMember").addEventListener("change",refreshRdHint);
+document.getElementById("rdCost").addEventListener("input",refreshRdHint);
+document.getElementById("btnRedeem").addEventListener("click",()=>{
+  if(!guard())return;
+  const mid=+document.getElementById("rdMember").value;
+  const nm=document.getElementById("rdName").value.trim();
+  const cost=parseInt(document.getElementById("rdCost").value||"0",10);
+  if(!mid){toast("请选择人员");return;}
+  if(!nm){toast("请填写礼品名称");return;}
+  if(!(cost>0)){toast("请填写消耗积分（大于 0）");return;}
+  const av=avail(mid);const m=D.members.find(x=>x.id===mid);
+  if(av<cost){toast("积分不足，还需 "+(cost-av)+" 分");return;}
+  D.redemptions.push({id:uid(),memberId:mid,memberName:m.name,rewardId:0,rewardName:nm,cost,date:new Date().toISOString().slice(0,10),ts:Date.now()});
+  save();toast(m.name+" 兑换 "+nm+"（-"+cost+"分）");renderAll();
+  document.getElementById("rdName").value="";document.getElementById("rdCost").value=0;
+});
+/* 心愿墙保存：管理员=整体替换（可增删整理）；访客=只能追加，防止误删别人的心愿 */
+function wishLines(v){return (v||"").split("\n").map(s=>s.trim()).filter(Boolean);}
+document.getElementById("btnSaveWish").addEventListener("click",()=>{
+  const box=document.getElementById("wish");if(!box)return;
+  if(ROLE==="visitor"){
+    const oldArr=wishLines(D.wish);
+    const added=wishLines(box.value).filter(s=>oldArr.indexOf(s)<0);
+    if(!added.length){toast("没有新的心愿（这些已经在心愿墙上啦）");return;}
+    D.wish=oldArr.concat(added).join("\n");
+    save();renderWish();toast("已加入心愿墙 +"+added.length+" 条 ✍️");
+    return;
+  }
+  if(!guard())return;
+  D.wish=box.value;save();toast("心愿已保存");renderWish();});
+
+/* ===== 计算 ===== */
+function totals(){const m={};D.members.forEach(x=>m[x.id]={name:x.name,total:0,by:{}});
+  D.events.forEach(e=>{if(!m[e.memberId])m[e.memberId]={name:e.memberName,total:0,by:{}};
+    m[e.memberId].total+=e.score;m[e.memberId].by[e.type]=(m[e.memberId].by[e.type]||0)+e.score;});
+  return m;}
+function avail(id){const t=totals()[id]?totals()[id].total:0;const used=D.redemptions.filter(r=>r.memberId===id).reduce((a,b)=>a+b.cost,0);return t-used;}
+function redeemed(id){return D.redemptions.filter(r=>r.memberId===id).reduce((a,b)=>a+b.cost,0);}
+
+/* ===== 渲染 ===== */
+function renderAll(){renderMembers();renderEnMember();renderRank();renderLog();renderRd();renderWish();refreshRdHint();}
+
+function renderMembers(){
+  const b=document.getElementById("memBody");b.innerHTML="";
+  D.members.forEach(m=>{const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${m.name}</td><td><span class="pill">${m.active?"在职":"—"}</span></td>
+      <td>${totals()[m.id]?totals()[m.id].total:0}</td>
+      <td><button class="btn danger sm" data-del="${m.id}">删除</button></td>`;
+    b.appendChild(tr);});
+  b.querySelectorAll("[data-del]").forEach(btn=>btn.onclick=()=>{if(!guard())return;delMem(+btn.dataset.del);});
+}
+function renderEnMember(){const s=document.getElementById("enMember");const cur=s.value;
+  s.innerHTML='<option value="">— 请选择 —</option>'+D.members.map(m=>`<option value="${m.id}">${m.name}</option>`).join("");
+  if(cur)s.value=cur;
+  const rs=document.getElementById("rdMember");const rc=rs.value;
+  rs.innerHTML='<option value="">— 请选择 —</option>'+D.members.map(m=>`<option value="${m.id}">${m.name}（可用${avail(m.id)}）</option>`).join("");
+  if(rc)rs.value=rc;
+}
+function renderRank(){const t=ovRangeVal();const tb=document.querySelector("#rankTable tbody");
+  const data=D.members.map(m=>{const tt=totals()[m.id]?totals()[m.id].total:0;
+    const by=totals()[m.id]?totals()[m.id].by:{};
+    const evs=D.events.filter(e=>e.memberId===m.id&&inRange(e.date,t));
+    const totInRange=evs.reduce((a,b)=>a+b.score,0);
+    return{m,name:m.name,total:tt,range:totInRange,av:avail(m.id),used:redeemed(m.id),by};});
+  data.sort((a,b)=>b.range-a.range);
+  tb.innerHTML=data.map((d,i)=>`<tr><td>${i+1}</td><td>${d.name}</td>
+    <td><b>${d.range}</b> <span class="muted">(累计${d.total})</span></td><td>${d.av}</td><td>${d.used}</td>
+    <td class="breakdown">${Object.entries(d.by).map(([k,v])=>k+" "+v).join(" / ")||"—"}</td></tr>`).join("");
+  document.getElementById("ovEmpty").style.display=data.length?"none":"block";
+  /* 周期文案：按钮组右侧显示真实起止日期，卡片统计口径也跟着变 */
+  const spanEl=document.getElementById("ovSpan");if(spanEl)spanEl.textContent="（"+rangeSpan(t)+"）";
+  const allTot=D.events.reduce((a,b)=>a+b.score,0);
+  const rngTot=D.events.filter(e=>inRange(e.date,t)).reduce((a,b)=>a+b.score,0);
+  const rngN=D.events.filter(e=>inRange(e.date,t)).length;
+  document.getElementById("ovStat").innerHTML=
+    `<div class="box"><div class="n">${D.members.length}</div><div class="l">在职人数</div></div>
+     <div class="box"><div class="n">${rngTot}</div><div class="l">${rangeText(t)}积分</div></div>
+     <div class="box"><div class="n">${D.redemptions.reduce((a,b)=>a+b.cost,0)}</div><div class="l">累计兑换分</div></div>
+     <div class="box"><div class="n">${D.events.length}</div><div class="l">累计录入笔数</div></div>`;
+  const infoEl=document.getElementById("ovInfo");
+  if(infoEl)infoEl.textContent=`本周期 ${rngN} 笔 · 合计 ${rngTot>0?"+":""}${rngTot} 分 · 历史累计 ${allTot} 分`;
+}
+function renderLog(){const r=document.getElementById("logRange").value;const mid=document.getElementById("logMember").value;
+  const lm=document.getElementById("logMember");const cur=lm.value;
+  lm.innerHTML='<option value="">全部人员</option>'+D.members.map(m=>`<option value="${m.id}">${m.name}</option>`).join("");
+  if(cur)lm.value=cur;
+  /* 事项下拉：选项从实际流水里动态汇总（含自定义事项），保住当前选择 */
+  const lt=document.getElementById("logType");const curT=lt.value;
+  const types=[...new Set(D.events.map(e=>e.type).filter(Boolean))].sort();
+  lt.innerHTML='<option value="">全部事项</option>'+types.map(t=>`<option value="${t}">${t}</option>`).join("");
+  lt.value=types.includes(curT)?curT:"";
+  const type=lt.value;
+  const kw=(document.getElementById("logKw").value||"").trim().toLowerCase();
+  let evs=[...D.events].sort((a,b)=>b.ts-a.ts).filter(e=>inRange(e.date,r)&&(!mid||e.memberId===+mid)&&(!type||e.type===type)
+    &&(!kw||[e.source,e.note,e.memberName,e.type].some(v=>String(v||"").toLowerCase().includes(kw))));
+  const tb=document.getElementById("logBody");
+  tb.innerHTML=evs.map(e=>`<tr><td>${e.date}</td><td>${e.memberName}</td><td>${e.type}</td>
+    <td>${e.source||"—"}</td>
+    <td><b>${e.score>0?"+":""}${e.score}</b></td><td class="muted">${e.note||""}</td>
+    <td><button class="btn danger sm" data-e="${e.id}">删</button></td></tr>`).join("");
+  document.getElementById("logEmpty").style.display=evs.length?"none":"block";
+  const sum=evs.reduce((a,b)=>a+b.score,0);
+  const tags=[];
+  if(type)tags.push("事项 "+type);
+  if(mid)tags.push("仅 "+((D.members.find(m=>m.id===+mid)||{}).name||"?"));
+  if(kw)tags.push('关键词“'+kw+'”');
+  document.getElementById("logInfo").textContent=`共 ${evs.length} 笔${tags.length?"（"+tags.join(" · ")+"）":""} · 区间 ${rangeSpan(r)} · 合计 ${sum>0?"+":""}${sum} 分`;
+  tb.querySelectorAll("[data-e]").forEach(b=>b.onclick=()=>{if(!guard())return;
+    /* id 是数字、dataset 是字符串，必须统一成字符串比较，否则 !== 永远成立 → 删除无效 */
+    D.events=D.events.filter(x=>String(x.id)!==String(b.dataset.e));
+    save();renderAll();toast("已删除该记录");});
+}
+function renderRd(){const tb=document.getElementById("rdBody");
+  const rows=[...D.redemptions].sort((a,b)=>b.ts-a.ts);
+  tb.innerHTML=rows.map(r=>`<tr><td>${r.date}</td><td>${r.memberName}</td><td>${r.rewardName}</td>
+    <td><b>-${r.cost}</b></td><td>${(r.cost*D.settings.rate)} 元</td></tr>`).join("");
+  document.getElementById("rdEmpty").style.display=rows.length?"none":"block";
+}
+function renderWish(){document.getElementById("wish").value=D.wish||"";
+  const list=document.getElementById("wishList");
+  const arr=(D.wish||"").split("\n").map(s=>s.trim()).filter(Boolean);
+  list.innerHTML=arr.length?arr.map(s=>`<div class="wish"><span>🔸 ${s}</span></div>`).join(""):'<div class="muted">暂无心愿。</div>';
+}
+
+/* ===== 导出 ===== */
+document.getElementById("btnExportCSV").addEventListener("click",()=>{
+  const rows=[["日期","姓名","事项","积分来源","分值","备注"]].concat(D.events.map(e=>[e.date,e.memberName,e.type,e.source||"",e.score,e.note||""]));
+  showExport("积分明细.csv",rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(",")).join("\n"),"text/csv");
+});
+document.getElementById("btnExportJSON").addEventListener("click",()=>{
+  showExport("积分系统数据.json",JSON.stringify(D,null,2),"application/json");});
+document.getElementById("btnExportWeek").addEventListener("click",()=>{
+  const t=ovRangeVal();
+  const data=D.members.map(m=>{
+    const evs=D.events.filter(e=>e.memberId===m.id&&inRange(e.date,t));
+    const by={};evs.forEach(e=>by[e.type]=(by[e.type]||0)+e.score);
+    return{name:m.name,range:evs.reduce((a,b)=>a+b.score,0),by,used:redeemed(m.id)};}).sort((a,b)=>b.range-a.range);
+  const title=rangeText(t);
+  let md=`# 积分报表 · ${title}（${rangeSpan(t)}）\n\n`;
+  md+=`> 统计口径：${title}；生成时间 ${new Date().toLocaleString("zh-CN")}\n\n`;
+  md+=`| 排名 | 姓名 | ${title}积分 | 累计兑换 | 分项 |\n|---|---|---|---|---|\n`;
+  data.forEach((d,i)=>md+=`| ${i+1} | ${d.name} | ${d.range} | ${d.used} | ${Object.entries(d.by).map(([k,v])=>k+" "+v).join(" / ")||"—"} |\n`);
+  const total=data.reduce((a,b)=>a+b.range,0);
+  md+=`\n**合计：${total} 分**（${data.filter(d=>d.range>0).length} 人本期得分）\n`;
+  showExport("积分报表_"+title+".md",md,"text/markdown");
+});
+document.getElementById("btnCopyExport").addEventListener("click",()=>{
+  const ta=document.getElementById("exportOut");ta.select();
+  try{navigator.clipboard.writeText(ta.value);toast("已复制到剪贴板");}
+  catch(e){try{document.execCommand("copy");toast("已复制");}catch(_){toast("复制失败，请手动选择文本");}}
+});
+document.getElementById("btnImportJSON").addEventListener("click",()=>{if(!guard())return;document.getElementById("fileJSON").click();});
+document.getElementById("fileJSON").addEventListener("change",e=>{if(!guard())return;const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();r.onload=ev=>{try{D=normalize(JSON.parse(ev.target.result));save();toast("导入成功");renderAll();}catch(err){toast("JSON 解析失败");}};r.readAsText(f);});
+document.getElementById("btnClear").addEventListener("click",()=>{
+  if(!guard())return;
+  if(!confirm("确认清空全部数据？此操作不可恢复。"))return;
+  D=normalize(JSON.parse(JSON.stringify(SEED)));D.events=[];D.redemptions=[];D.members=[];D.rewards=[];D.wish="";save();toast("已清空");renderAll();});
+function download(name,content,type){try{const b=new Blob([content],{type});const u=URL.createObjectURL(b);
+  const a=document.createElement("a");a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);}
+  catch(e){toast("导出失败（当前环境可能不支持下载）："+e.message);}}
+function showExport(name,content,type){
+  const ta=document.getElementById("exportOut");
+  ta.value=(name?"# "+name+"\n\n":"")+content;
+  if(ta.scrollIntoView)ta.scrollIntoView({block:"nearest"});
+  try{download(name,content,type);toast("已生成，可复制下方文本或下载");}
+  catch(e){toast("已生成，请复制下方文本（当前环境禁止下载）");}
+}
+
+/* ===== 身份权限 ===== */
+const ADMIN_PWD="renjia888";
+let ROLE=null;
+function guard(){if(ROLE!=="admin"){toast("访客模式仅可预览，无操作权限");return false;}return true;}
+/* 访客隐藏的导航项（录音 56 号：访客不需要录入/管人/系统设置，仅保留查看与导出） */
+const VISITOR_HIDDEN=["entry","members","settings"];
+function showTab(t){const b=document.querySelector('nav button[data-t="'+t+'"]');if(b)b.click();}
+function applyRole(role){ROLE=role;try{sessionStorage.setItem("jf_role",role);}catch(e){}
+  document.body.dataset.role=role;
+  const chip=document.getElementById("roleChip");if(chip)chip.textContent=role==="admin"?"身份：管理员 🔑":"身份：访客 👁";
+  const m=document.getElementById("roleModal");if(m)m.style.display="none";
+  /* 心愿墙：访客也能填（只追加），控件文案随身份切换 */
+  const bw=document.getElementById("btnSaveWish");if(bw)bw.textContent=role==="admin"?"保存心愿":"提交我的心愿";
+  const wh=document.getElementById("wishHint");if(wh)wh.style.display=role==="visitor"?"":"none";
+  const wt=document.getElementById("wish");
+  if(wt)wt.placeholder=role==="admin"?"每行一个，如：电影票、奶茶、蓝牙耳机……":"写下你想要什么礼物（每行一个），提交后追加到下面的心愿墙";
+  /* 切到访客时，若正停在隐藏项上，自动跳回概览，避免停在空白页 */
+  if(role==="visitor"){
+    const cur=document.querySelector(".tab.active");
+    if(cur&&VISITOR_HIDDEN.includes(cur.id.replace("t-","")))showTab("overview");
+  }}
+function showRoleModal(){const m=document.getElementById("roleModal");if(m)m.style.display="flex";
+  const h=document.getElementById("pwdHint");if(h)h.textContent="";
+  const p=document.getElementById("adminPwd");
+  if(p){p.value="";setTimeout(()=>{try{p.focus();}catch(e){}},0);}}
+/* 密码框回车 = 点「进入管理员模式」 */
+document.getElementById("adminPwd").addEventListener("keydown",e=>{
+  if(e.key==="Enter"){e.preventDefault();document.getElementById("btnAsAdmin").click();}});
+document.getElementById("btnAsVisitor").addEventListener("click",()=>applyRole("visitor"));
+document.getElementById("btnAsAdmin").addEventListener("click",()=>{
+  const v=document.getElementById("adminPwd").value;
+  if(v===ADMIN_PWD)applyRole("admin");
+  else{document.getElementById("pwdHint").textContent="密码错误，无法进入管理员模式。";}});
+document.getElementById("btnSwitchRole").addEventListener("click",showRoleModal);
+
+/* init */
+document.getElementById("enDate").value=new Date().toISOString().slice(0,10);
+function renderSettings(){
+  document.getElementById("setCheckin").value=D.settings.checkin;
+  document.getElementById("setSport").value=(D.settings.sport!=null?D.settings.sport:2);
+  document.getElementById("setRate").value=D.settings.rate;
+  document.getElementById("setRange").value=D.settings.defRange;
+}
+document.getElementById("btnSaveSet").addEventListener("click",()=>{
+  if(!guard())return;
+  D.settings.checkin=parseInt(document.getElementById("setCheckin").value||"1",10)||0;
+  D.settings.sport=parseInt(document.getElementById("setSport").value||"2",10)||0;
+  D.settings.rate=parseFloat(document.getElementById("setRate").value||"1")||0;
+  D.settings.defRange=document.getElementById("setRange").value;
+  /* 立即生效：把新默认周期套到概览筛选上，否则要刷新页面才看得到变化 */
+  setOvRange(D.settings.defRange,false);
+  save();toast("设置已保存");syncType();renderAll();
+});
+/* 筛选联动：区间 / 人员 / 事项 / 关键词 改变后立即重绘
+   注：此前这三个下拉漏绑 change，选了「本周 / 本月」页面不会刷新，看起来像筛选没做 */
+document.getElementById("logRange").addEventListener("change",renderLog);
+document.getElementById("logMember").addEventListener("change",renderLog);
+document.getElementById("logType").addEventListener("change",renderLog);
+document.getElementById("logKw").addEventListener("input",renderLog);
+/* 一键重置全部筛选条件 */
+document.getElementById("btnLogReset").addEventListener("click",()=>{
+  document.getElementById("logRange").value="all";
+  document.getElementById("logMember").value="";
+  document.getElementById("logType").value="";
+  document.getElementById("logKw").value="";
+  renderLog();toast("已重置筛选");
+});
+/* 概览核算周期：点击按钮组任意档位即时重算（事件委托，避免逐个绑定漏掉） */
+document.getElementById("ovRange").addEventListener("click",e=>{
+  const b=e.target.closest("[data-r]");if(!b)return;setOvRange(b.dataset.r);
+});
+
+renderSettings();
+setOvRange(D.settings.defRange,false);
+syncType();renderAll();
+
+/* 启动：若本会话已选过身份则沿用，否则弹出选择 */
+let _r=null;try{_r=sessionStorage.getItem("jf_role");}catch(e){}
+if(_r==="admin"||_r==="visitor")applyRole(_r);else showRoleModal();
+</script>
+</body>
+</html>
